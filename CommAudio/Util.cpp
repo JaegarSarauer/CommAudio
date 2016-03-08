@@ -161,17 +161,9 @@ void getData(HANDLE hFile, char * buffer, int size)
 		{
 			writeToScreen("ReadFile failed!");
 		}
-	}
-	else {
-		time_t t;
-		srand((unsigned)time(&t));
-		//randomly generate
-		char temp;
-		for (int i = 0; i < size; i++)
+		if (charsRead < size)
 		{
-			temp = (rand() % 93) + 33;
-			buffer[i] = temp;
+			buffer[charsRead] = '\0';
 		}
 	}
-	buffer[size] = '\0';
 }
