@@ -271,7 +271,10 @@ DWORD WINAPI tcpThread(LPVOID lpParameter)
 		socketInfo->BytesSEND = 0;
 		socketInfo->BytesRECV = 0;
 		socketInfo->DataBuf.len = DATA_BUFSIZE;
-		socketInfo->DataBuf.buf = socketInfo->Buffer;
+		socketInfo->DataBuf.buf = socketInfo->Buffer+socketInfo->Head*DATA_BUFSIZE;
+		if(++socketInfo->Head == 64){
+			socketInfo->Head = 0;
+		}
 		socketInfo->Timeout = INFINITE;
 
 		flags = 0;
@@ -546,7 +549,10 @@ DWORD WINAPI udpThread(LPVOID lpParameter)
 		socketInfo->BytesSEND = 0;
 		socketInfo->BytesRECV = 0;
 		socketInfo->DataBuf.len = DATA_BUFSIZE;
-		socketInfo->DataBuf.buf = socketInfo->Buffer;
+		socketInfo->DataBuf.buf = socketInfo->Buffer+Head*DATA_BUFSIZE;
+		if(++socketInfo->Head == 64){
+			socketInfo->Head = 0;
+		}
 		socketInfo->Timeout = INFINITE;
 
 		flags = 0;
