@@ -15,19 +15,20 @@ CircularBuffer::CircularBuffer(int size, int blocks)
 QByteArray * CircularBuffer::cbRead(int blocksToRead)
 {
     //reading = true;
-    if (blocksUnread == 0)
+    /*if (blocksUnread == 0)
     {
         reading = false;
         emit stopReading();
     }
     if (blocksToRead > blocksUnread) {
         blocksToRead = blocksUnread;
-    }
-    QByteArray * readBlock = new QByteArray(buffer->mid(readPos, blockSize));
+    }*/
+    //QByteArray * readBlock = new QByteArray(buffer->mid(readPos, blockSize));
     //qstrncpy(readBlock, buffer[readPos], blockSize);
     //qstrcpy(readBlock, buffer->mid(readPos, blockSize));
-    if (readBlock->length() != 0)
-    {
+    //if (readBlock->length() != 0)
+    //{
+    int oldReadPos = readPos;
         blocksUnread += blocksToRead;
         readPos += blockSize * blocksToRead;
         if (readPos == blockSize * numOfBlocks)
@@ -35,7 +36,7 @@ QByteArray * CircularBuffer::cbRead(int blocksToRead)
             readPos = 0;
         }
     }
-    return readBlock;
+    return buffer[oldReadPos];
 }
 
 bool CircularBuffer::cbWrite(char * data)
@@ -45,7 +46,7 @@ bool CircularBuffer::cbWrite(char * data)
         //error
         return false;
     }
-    if ((readPos > writePos) && (writePos + blockSize > readPos))
+    if (readPos == writePos) // overwriting or blocksUnread == numOfBlocks
     {
         //error
         return false;
@@ -59,7 +60,7 @@ bool CircularBuffer::cbWrite(char * data)
         {
             writePos = 0;
         }
-        if (blocksUnread > (0.2 * numOfBlocks) && !reading)
+        /*if (blocksUnread > (0.2 * numOfBlocks) && !reading)
         {
             emit startReading();
             reading = true;
@@ -67,7 +68,7 @@ bool CircularBuffer::cbWrite(char * data)
         if ((readPos > writePos) && (writePos + (blockSize * 0.8 * numOfBlocks) >= readPos)) //getting close to overwriting data
         {
             emit stopWriting();
-        }
+        }*/
         return true;
     }
 }
@@ -75,6 +76,11 @@ bool CircularBuffer::cbWrite(char * data)
 bool CircularBuffer::isEmpty()
 {
     return (readPos == writePos);
+}
+
+int CircularBuffer::getBlocksUnread()
+{
+    return blocksUnread;
 }
 
 CircularBuffer::~CircularBuffer()

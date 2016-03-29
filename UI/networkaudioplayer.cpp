@@ -27,6 +27,7 @@ void NetworkAudioPlayer::setParameters()
     //outputBuffer[1].open(QIODevice::ReadOnly);
     audio = new QAudioOutput(deviceinfo, format, this);
     audio->setVolume(1.0);
+    audioOutput->setNotifyInterval(50);
     audio->setBufferSize(DATA_BUFSIZE * 0.2 * MAX_BLOCKS);
     audioDevice = audio->start();
     audioDevice->open(QIODevice::ReadWrite);
