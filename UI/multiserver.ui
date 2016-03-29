@@ -305,7 +305,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_6">
+                  <widget class="QPushButton" name="SendAudioButton">
                    <property name="text">
                     <string>Send Microphone Audio</string>
                    </property>
@@ -339,7 +339,7 @@
      <x>0</x>
      <y>0</y>
      <width>951</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
