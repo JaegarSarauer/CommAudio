@@ -39,6 +39,8 @@ private slots:
 
     void on_SendAudioButton_released();
 
+    void on_StopSendingButton_released();
+
 private:
     Ui::MultiServer *ui;
     AudioManager *audioManager;

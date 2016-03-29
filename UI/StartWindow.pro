@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     networkmanager.cpp \
     circularbuffer.cpp \
     globalobjects.cpp \
-    networkaudioplayer.cpp
+    networkaudioplayer.cpp \
+    sender.cpp
 
 HEADERS  += startwindow.h \
     multiserver.h \
@@ -31,7 +32,8 @@ HEADERS  += startwindow.h \
     networkmanager.h \
     circularbuffer.h \
     globalobjects.h \
-    networkaudioplayer.h
+    networkaudioplayer.h \
+    sender.h
 
 FORMS    += startwindow.ui \
     multiserver.ui

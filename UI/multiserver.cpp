@@ -4,7 +4,7 @@
 #include "networkmanager.h"
 #include "receiver.h"
 
-
+NetworkManager netManager;
 
 MultiServer::MultiServer(QWidget *parent) :
     QMainWindow(parent),
@@ -108,9 +108,16 @@ void MultiServer::on_QueueRemoveButton_released()
 void MultiServer::on_SendAudioButton_released()
 {
     qDebug() << "Send";
-    NetworkManager netManager;
+    //NetworkManager netManager;
     netManager.startNetwork();
-    Receiver r;
-    r.startUDPReceiver(7000);
+    //Receiver r;
+    //r.startUDPReceiver(7000);
+}
 
+void MultiServer::on_StopSendingButton_released()
+{
+    qDebug() << "Stop";
+    char host[20] = "192.168.0.10";
+    netManager.connectViaTCP(host, 8000);
+    netManager.setupUDPforP2P();
 }

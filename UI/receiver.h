@@ -4,6 +4,7 @@
 #include <QObject>
 #include <WinSock2.h>
 #include "globalobjects.h"
+#include "networkmanager.h"
 
 #define DATA_BUFSIZE    4096
 #define MAXLEN          256

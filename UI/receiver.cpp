@@ -7,7 +7,7 @@ DWORD WINAPI tcpThread(LPVOID lpParameter);
 DWORD WINAPI startTCPServer(LPVOID n);
 void CALLBACK tcpRoutine(DWORD, DWORD, LPOVERLAPPED, DWORD);
 
-SOCKET udpSocket, tcpSocket, tcpAcceptSocket;
+SOCKET tcpAcceptSocket;
 BOOL serverRunning = false;
 int uPort, tPort;
 HANDLE hWriteFile, hServerLogFile;
@@ -71,14 +71,14 @@ DWORD WINAPI startUDPServer(LPVOID n)
     serverRunning = true;
 
     // Create a datagram socket
-    if ((udpSocket = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
+    /*if ((udpSocket = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
     {
         ////writeToScreen("Can't create a socket");
         return -1;
-    }
+    }*/
 
     // Bind an address to the socket
-    memset((char *)&udpServer, 0, sizeof(udpServer));
+    /*memset((char *)&udpServer, 0, sizeof(udpServer));
     udpServer.sin_family = AF_INET;
     udpServer.sin_port = htons(uPort);
     udpServer.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -87,7 +87,7 @@ DWORD WINAPI startUDPServer(LPVOID n)
     {
         ////writeToScreen("Can't bind name to socket");
         return -1;
-    }
+    }*/
 
     if ((udpEvent = WSACreateEvent()) == WSA_INVALID_EVENT)
     {
@@ -335,11 +335,11 @@ DWORD WINAPI startTCPServer(LPVOID n)
     HANDLE threadHandle;
 
     // Create a stream socket
-    if ((tcpSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
+    /*if ((tcpSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
     {
         //writeToScreen("Can't create a socket");
         //exit(1);
-    }
+    }*/
 
     // Bind an address to the socket
     memset((char *)&tcpServer, 0, sizeof(tcpServer));
