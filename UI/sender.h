@@ -7,6 +7,8 @@ class Sender
 {
 public:
     Sender();
+    void sendViaTCP();
+    void sendViaUDP();
 };
 
 #endif // SENDER_H

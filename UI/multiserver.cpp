@@ -3,6 +3,7 @@
 #include <QtDebug>
 #include "networkmanager.h"
 #include "receiver.h"
+#include "networkaudioplayer.h"
 
 NetworkManager netManager;
 
@@ -107,9 +108,9 @@ void MultiServer::on_QueueRemoveButton_released()
 
 void MultiServer::on_SendAudioButton_released()
 {
-    qDebug() << "Send";
+    //qDebug() << "Send";
     //NetworkManager netManager;
-    netManager.startNetwork();
+   // netManager.startNetwork();
     //Receiver r;
     //r.startUDPReceiver(7000);
 }
@@ -117,7 +118,20 @@ void MultiServer::on_SendAudioButton_released()
 void MultiServer::on_StopSendingButton_released()
 {
     qDebug() << "Stop";
+    netManager.startNetwork();
     char host[20] = "192.168.0.10";
     netManager.connectViaTCP(host, 8000);
     netManager.setupUDPforP2P();
+    Receiver r;
+    r.startUDPReceiver(7000);
+    QThread * thread = new QThread( );
+    NetworkAudioPlayer * netPlayer = new NetworkAudioPlayer();
+    netPlayer->setParameters();
+    netPlayer->moveToThread(thread);
+
+    connect (audioBuffer, &CircularBuffer::stopReading, netPlayer, &NetworkAudioPlayer::stopAudio);
+    connect (audioBuffer, &CircularBuffer::startReading, netPlayer, &NetworkAudioPlayer::playAudio);
+
+    thread->start();
+
 }

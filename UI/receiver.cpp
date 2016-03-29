@@ -21,9 +21,6 @@ void Receiver::startUDPReceiver(int port)
 
     uPort = port;
 
-    audioBuffer = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
-    InitializeCriticalSection(&bufferAccess);
-
     if ((udpHandle = CreateThread(NULL, 0, startUDPServer, (LPVOID)0, 0, &udpThreadId)) == NULL)
     {
         //display error
@@ -105,7 +102,7 @@ DWORD WINAPI startUDPServer(LPVOID n)
     FD_ZERO(&fds);
     FD_SET(udpSocket, &fds);
 
-    tv.tv_sec = 60;
+    tv.tv_sec = 20;
     tv.tv_usec = 0;
 
     while (true)
@@ -124,7 +121,7 @@ DWORD WINAPI startUDPServer(LPVOID n)
             }
             else if (selectRet == 0)
             {
-                tv.tv_sec = 60;
+                tv.tv_sec = 20;
                 FD_ZERO(&fds);
                 FD_SET(udpSocket, &fds);
 

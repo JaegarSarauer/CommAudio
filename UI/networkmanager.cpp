@@ -82,8 +82,8 @@ void NetworkManager::setupUDPforP2P()
     memset((char *)&udpPeer, 0, sizeof(udpPeer));
     udpPeer.sin_family = AF_INET;
     udpPeer.sin_port = htons(UDP_PORT);
-    //udpPeer.sin_addr.s_addr = htonl(INADDR_ANY);
-    udpPeer.sin_addr.s_addr = peer.sin_addr.s_addr; //does this work??
+    udpPeer.sin_addr.s_addr = htonl(INADDR_ANY);
+    //udpPeer.sin_addr.s_addr = peer.sin_addr.s_addr; //does this work??
 
     if (bind(udpSocket, (struct sockaddr *)&udpPeer, sizeof(udpPeer)) == SOCKET_ERROR)
     {

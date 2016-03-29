@@ -20,11 +20,12 @@ private:
     QAudioOutput *audio;
     QBuffer outputBuffer[2];
     QIODevice * audioDevice;
+    QAudioDeviceInfo deviceinfo;
     bool second;
 signals:
 public slots:
     void playAudio();
-    void appendAudioData();
+    void appendAudioData(qint64 bytesWritten);
     void stopAudio();
 
 };

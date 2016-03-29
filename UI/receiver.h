@@ -6,10 +6,6 @@
 #include "globalobjects.h"
 #include "networkmanager.h"
 
-#define DATA_BUFSIZE    4096
-#define MAXLEN          256
-#define MAX_BLOCKS      100
-
 typedef struct _SOCKET_INFORMATION {
     OVERLAPPED Overlapped;
     SOCKET Socket;

@@ -12,9 +12,9 @@ CircularBuffer::CircularBuffer(int size, int blocks)
     blocksUnread = 0;
 }
 
-char * CircularBuffer::cbRead(int blocksToRead)
+QByteArray * CircularBuffer::cbRead(int blocksToRead)
 {
-    reading = true;
+    //reading = true;
     if (blocksUnread == 0)
     {
         reading = false;
@@ -23,9 +23,10 @@ char * CircularBuffer::cbRead(int blocksToRead)
     if (blocksToRead > blocksUnread) {
         blocksToRead = blocksUnread;
     }
-    char * readBlock = (char *) alloca(blockSize * sizeof(char) * blocksToRead);
-    qstrcpy(readBlock, buffer[readPos]);
-    if (strlen(readBlock) != 0)
+    QByteArray * readBlock = new QByteArray(buffer->mid(readPos, blockSize));
+    //qstrncpy(readBlock, buffer[readPos], blockSize);
+    //qstrcpy(readBlock, buffer->mid(readPos, blockSize));
+    if (readBlock->length() != 0)
     {
         blocksUnread += blocksToRead;
         readPos += blockSize * blocksToRead;
@@ -58,9 +59,10 @@ bool CircularBuffer::cbWrite(char * data)
         {
             writePos = 0;
         }
-        if (blocksUnread > 0.2 * numOfBlocks && !reading)
+        if (blocksUnread > (0.2 * numOfBlocks) && !reading)
         {
             emit startReading();
+            reading = true;
         }
         if ((readPos > writePos) && (writePos + (blockSize * 0.8 * numOfBlocks) >= readPos)) //getting close to overwriting data
         {
