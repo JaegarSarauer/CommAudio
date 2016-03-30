@@ -49,9 +49,12 @@ void MultiServer::on_buttonPauseAudio_released()
         audioManager->pauseAudio();
 }
 
-/*
- * When the user clicks the queue add button, it'll add the selected items to the queue list to play.
- */
+
+/*void MultiServer::on_sliderSound_actionTriggered(int action)
+{
+    audioManager->setVolume((double)ui->sliderSound->sliderPosition() / 100);
+}*/
+
 void MultiServer::on_QueueAddButton_released()
 {
     QList<QListWidgetItem *> selectedFile = ui->listMusicFiles->selectedItems();

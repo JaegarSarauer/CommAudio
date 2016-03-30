@@ -8,9 +8,10 @@ class CircularBuffer : public QObject
     Q_OBJECT
 public:
     CircularBuffer(int size, int blocks);
-    bool cbWrite(char * data);
+    bool cbWrite(const char * data);
     QByteArray * cbRead(int blocksToRead);
     bool isEmpty();
+    bool isFull();
     int getBlocksUnread();
     ~CircularBuffer();
 private:

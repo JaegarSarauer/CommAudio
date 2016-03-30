@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     networkaudioplayer.cpp \
     sender.cpp \
     peertopeer.cpp \
-    multiclient.cpp
+    multiclient.cpp \
+    audioplaythread.cpp
 
 HEADERS  += startwindow.h \
     multiserver.h \
@@ -37,7 +38,8 @@ HEADERS  += startwindow.h \
     networkaudioplayer.h \
     sender.h \
     peertopeer.h \
-    multiclient.h
+    multiclient.h \
+    audioplaythread.h
 
 FORMS    += startwindow.ui \
     multiserver.ui \
