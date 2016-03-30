@@ -15,10 +15,10 @@ public:
     ~AudioThread() {}
 
 public slots:
-    void doWork();
+    void checkForEnding();
 
 signals:
-    void workFinished();
+    void workFinished(const QString msg);
 
 private:
     QIODevice * audioDevice;

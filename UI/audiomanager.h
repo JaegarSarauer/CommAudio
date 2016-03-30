@@ -4,12 +4,17 @@
 #include <QAudioFormat>
 #include <QObject>
 #include <QFile>
+#include <QThread>
 #include <QAudioOutput>
 
 #include <inttypes.h>
 
-class AudioManager
+#include "circularbuffer.h"
+#include "audioplaythread.h"
+
+class AudioManager : public QObject
 {
+    Q_OBJECT
 public:
     AudioManager(QObject * p) : parent(p) {
         audio = new QAudioOutput(QAudioFormat(), p);
@@ -22,17 +27,27 @@ public:
     void pauseAudio();
     void unpauseAudio();
     bool isPaused();
+    bool isPlaying();
+
+    void loadDataIntoBuffer();
+    void writeDataToDevice();
 
     ~AudioManager();
 
 private:
     bool PAUSED = false;
+    bool PLAYING = false;
     QAudioFormat format;
     QAudioOutput *audio;
     QObject *parent;
     QFile *file;
     QIODevice *device;
     double constantVolume = 1.0;
+    CircularBuffer * audioBuf;
+    AudioPlayThread * bufferListener;
+
+signals:
+    void finishedLoading();
 };
 
 typedef struct  WAV_HEADER
