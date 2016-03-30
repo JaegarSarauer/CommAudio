@@ -3,7 +3,9 @@
 #include <QtDebug>
 
 
-
+/*
+ * Constructor for the multiserver window class.
+ */
 MultiServer::MultiServer(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MultiServer)
@@ -15,37 +17,37 @@ MultiServer::MultiServer(QWidget *parent) :
     currentQueueIndex = -1;
 }
 
+/*
+ * Destructor for the multi server window class.
+ */
 MultiServer::~MultiServer()
 {
     delete ui;
 }
 
-void MultiServer::on_pushButton_4_released()
-{
-    if (audioManager->isPaused()) {
-        audioManager->playAudio();
-    } else {
-        playNextSong();
-    }
-}
-
+/*
+ * When the user clicks the stop button, stop the audio, and stop the queue
+ * thread from attempting to play the next song.
+ */
 void MultiServer::on_buttonStopAudio_released()
 {
+    stopThreadLoop = true;
     audioManager->stopAudio();
+    currentQueueIndex--;
 }
 
+/*
+ * When the user clicks the pause button, pause the audio playing.
+ */
 void MultiServer::on_buttonPauseAudio_released()
 {
-    audioManager->pauseAudio();
+    if (audioManager->isPlaying())
+        audioManager->pauseAudio();
 }
 
-void MultiServer::on_sliderSound_actionTriggered(int action)
-{
-    audioManager->setVolume((double)ui->sliderSound->sliderPosition() / 100);
-}
-
-
-
+/*
+ * When the user clicks the queue add button, it'll add the selected items to the queue list to play.
+ */
 void MultiServer::on_QueueAddButton_released()
 {
     QList<QListWidgetItem *> selectedFile = ui->listMusicFiles->selectedItems();
@@ -53,10 +55,20 @@ void MultiServer::on_QueueAddButton_released()
     ui->listQueueFiles->addItem(index->text());
 }
 
+/*
+ * This function will play the next song in the list. It is auto triggered if it finds the
+ * currently playing song has finished.
+ */
 void MultiServer::playNextSong() {
-    qDebug() << "SO NICE";
+    if (stopThreadLoop) {
+        disconnect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
+        disconnect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+        stopThreadLoop = false;
+        return;
+    }
+
     if (ui->listQueueFiles->count() <= 0) {
-        updateStatusBar("No songs in queue.");
+        AddStatusMessage("No songs in queue.");
         return;
     }
 
@@ -75,30 +87,72 @@ void MultiServer::playNextSong() {
     current->setBackgroundColor(Qt::green);
     audioManager->setupAudioPlayer(new QFile(current->text()));
     QIODevice * device = audioManager->playAudio();
-    /*AudioThread * deviceListener = new AudioThread(device);
-    deviceListener->start();*/
-    QThread *thread = new QThread( );
-    AudioThread *deviceListener = new AudioThread(device);
-    deviceListener->moveToThread(thread);
-    connect( thread, SIGNAL(started()), deviceListener, SLOT(doWork()) );
-    connect( deviceListener, SIGNAL(workFinished()), thread, SLOT(quit()) );
-    connect( deviceListener, SIGNAL(workFinished()), this, SLOT(playNextSong()) );
+
+    QThread *audioThread = new QThread( );
+    deviceListener = new AudioThread(device);
+    deviceListener->moveToThread(audioThread);
+
+    connect( audioThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
     //automatically delete thread and deviceListener object when work is done:
-    connect( thread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
-    connect( thread, SIGNAL(finished()), thread, SLOT(deleteLater()) );
-    thread->start();
+    connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
+    connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
+    audioThread->start();
 }
 
-void quit() {
-    qDebug() << "We done";
+/*
+ * This function will add a status message to the status bar.
+ */
+void MultiServer::AddStatusMessage(const QString msg) {
+    if (!stopThreadLoop)
+        ui->StatusBar->addItem(QString(msg));
 }
 
-void MultiServer::updateStatusBar(const QString msg) {
-    ui->playingStatusBar->setText(msg);
-}
-
+/*
+ * This function will remove the selected songs from the queue list when
+ * the user clicks the remove queue button.
+ */
 void MultiServer::on_QueueRemoveButton_released()
 {
     QList<QListWidgetItem *> indexes = ui->listQueueFiles->selectedItems();
     qDeleteAll(indexes.begin(), indexes.end());
 }
+
+/*
+ * This function will be called by the network layer to notify the application layer
+ * with a confirmation message on a successful connection.
+ * param bool connected = if true, successful connection, else, connection failed.
+ */
+// ---- TODO ---- call this function on successful connection
+void MultiServer::successfulConnection(bool connected) {
+    if (connected)
+        AddStatusMessage("Connection Successful!");
+    else
+        AddStatusMessage("Unable to connect to peer.");
+}
+
+/*
+ * This function will disconnect the user when they click the disconnect button.
+ */
+void MultiServer::on_buttonDisconnect_released()
+{
+    // ---- TODO ---- disconnect this peer here.
+    AddStatusMessage("Disconnected from peer.");
+}
+
+/*
+ * This function catches a click on the play audio button. If the button is clicked,
+ * it will play the audio from where it left off if its paused, if not, it will play
+ * the next song in the list.
+ */
+void MultiServer::on_buttonPlay_released()
+{
+    if (audioManager->isPaused()) {
+        audioManager->playAudio();
+    } else {
+        playNextSong();
+    }
+}
+
+

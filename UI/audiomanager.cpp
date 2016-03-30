@@ -30,6 +30,7 @@ QIODevice *AudioManager::playAudio() {
     } else {
         unpauseAudio();
     }
+    PLAYING = true;
     PAUSED = false;
     return device;
 }
@@ -45,6 +46,7 @@ void AudioManager::stopAudio() {
     file->close();
     delete audio;
     PAUSED = false;
+    PLAYING = false;
 }
 
 void AudioManager::pauseAudio() {
@@ -58,4 +60,8 @@ void AudioManager::unpauseAudio() {
 
 bool AudioManager::isPaused() {
     return PAUSED;
+}
+
+bool AudioManager::isPlaying() {
+    return PLAYING;
 }

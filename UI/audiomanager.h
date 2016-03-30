@@ -22,11 +22,13 @@ public:
     void pauseAudio();
     void unpauseAudio();
     bool isPaused();
+    bool isPlaying();
 
     ~AudioManager();
 
 private:
     bool PAUSED = false;
+    bool PLAYING = false;
     QAudioFormat format;
     QAudioOutput *audio;
     QObject *parent;
