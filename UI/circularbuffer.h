@@ -11,6 +11,7 @@ public:
     bool cbWrite(char * data);
     QByteArray * cbRead(int blocksToRead);
     bool isEmpty();
+    int getBlocksUnread();
     ~CircularBuffer();
 private:
     QByteArray * buffer;

@@ -38,19 +38,12 @@ Sender::Sender()
 ---------------------------------------------------------------------------------*/
 void sendViaTCP()
 {
-    int err, server_len;
-    struct hostent	*hp;
-    struct sockaddr_in server;
     char *sbuf;
-    HANDLE hFile = NULL, hLogFile;
     char message[256];
 
     sbuf = (char*)malloc(DATA_BUFSIZE);
 
     // transmit data
-    server_len = sizeof(server);
-
-    //getData(hFile, sbuf, PACKETSIZE);
     if (send(tcpSocket, sbuf, strlen(sbuf), 0) == -1)
     {
         //sprintf(message, "error: %d", WSAGetLastError());
@@ -88,18 +81,18 @@ void sendViaTCP()
 --	 screen before closing the socket.
 --
 ---------------------------------------------------------------------------------*/
-/*void sendViaUDP()
+void sendViaUDP()
 {
-    // transmit data
-    server_len = sizeof(server);
+    char *sbuf;
 
-    //get data
-    //getData(hFile, sbuf, PACKETSIZE);
-    //int length = strlen(sbuf);
-    //length = length > packetSize ? packetSize : length;
-    if (sendto(sd, sbuf, strlen(sbuf), 0, (struct sockaddr *)&server, server_len) == -1)
+    int server_len = sizeof(udpPeer);
+
+    sbuf = (char*)malloc(DATA_BUFSIZE);
+
+    // transmit data
+    if (sendto(udpSocket, sbuf, strlen(sbuf), 0, (struct sockaddr *)&udpPeer, server_len) == -1)
     {
         //sprintf(message, "error: %d", WSAGetLastError());
         //writeToScreen(message);
     }
-}*/
+}

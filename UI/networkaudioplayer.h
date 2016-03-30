@@ -25,7 +25,7 @@ private:
 signals:
 public slots:
     void playAudio();
-    void appendAudioData(qint64 bytesWritten);
+    void appendAudioData();
     void stopAudio();
 
 };

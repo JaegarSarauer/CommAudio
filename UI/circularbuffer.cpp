@@ -35,8 +35,7 @@ QByteArray * CircularBuffer::cbRead(int blocksToRead)
         {
             readPos = 0;
         }
-    }
-    return buffer[oldReadPos];
+    return &buffer[oldReadPos];
 }
 
 bool CircularBuffer::cbWrite(char * data)

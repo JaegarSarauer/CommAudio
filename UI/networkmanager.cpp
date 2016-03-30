@@ -2,6 +2,7 @@
 
 SOCKET udpSocket;
 SOCKET tcpSocket;
+struct sockaddr_in udpPeer;
 
 bool NetworkManager::startNetwork()
 {
@@ -77,8 +78,6 @@ void NetworkManager::cleanUp()
 
 void NetworkManager::setupUDPforP2P()
 {
-    struct sockaddr_in udpPeer;
-
     memset((char *)&udpPeer, 0, sizeof(udpPeer));
     udpPeer.sin_family = AF_INET;
     udpPeer.sin_port = htons(UDP_PORT);

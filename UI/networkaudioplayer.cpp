@@ -27,7 +27,7 @@ void NetworkAudioPlayer::setParameters()
     //outputBuffer[1].open(QIODevice::ReadOnly);
     audio = new QAudioOutput(deviceinfo, format, this);
     audio->setVolume(1.0);
-    audioOutput->setNotifyInterval(50);
+    audio->setNotifyInterval(50);
     audio->setBufferSize(DATA_BUFSIZE * 0.2 * MAX_BLOCKS);
     audioDevice = audio->start();
     audioDevice->open(QIODevice::ReadWrite);
@@ -50,9 +50,9 @@ void NetworkAudioPlayer::playAudio()
     }
 }
 
-void NetworkAudioPlayer::appendAudioData(qint64 bytesWritten)
+void NetworkAudioPlayer::appendAudioData()
 {
-    if (bytesWritten == (DATA_BUFSIZE * 0.1 * MAX_BLOCKS))
+    /*if (bytesWritten == (DATA_BUFSIZE * 0.1 * MAX_BLOCKS))
     {
 
     }
@@ -79,6 +79,15 @@ void NetworkAudioPlayer::appendAudioData(qint64 bytesWritten)
         outputBuffer[0].open(QIODevice::ReadOnly);
         audioDevice->write(outputBuffer[0].buffer());
         second = true;
+    }*/
+
+    int emptyBytes = audio->bytesFree();
+    //int periodSize = audio->periodSize();
+
+    //int chunks = emptyBytes/periodSize;
+    if (emptyBytes > DATA_BUFSIZE)
+    {
+
     }
 }
 

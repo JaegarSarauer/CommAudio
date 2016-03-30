@@ -12,6 +12,7 @@
 
 extern SOCKET udpSocket;
 extern SOCKET tcpSocket;
+extern sockaddr_in udpPeer;
 
 class NetworkManager
 {
@@ -24,7 +25,7 @@ public:
 
     bool tcpConnected;
 private:
-    struct sockaddr_in peer;
+    sockaddr_in peer;
 };
 
 #endif // NETWORKMANAGER_H
