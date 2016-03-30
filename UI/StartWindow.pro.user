@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
+<<<<<<< HEAD
 <!-- Written by QtCreator 3.6.1, 2016-03-29T00:14:05. -->
+=======
+<!-- Written by QtCreator 3.6.0, 2016-03-29T22:14:32. -->
+>>>>>>> aaaf5bd2a8a7058d299b4b03ae2d99367e73fb0e
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -284,7 +288,11 @@
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">StartWindow</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
+<<<<<<< HEAD
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:C:/Users/Gabriella/Documents/CommAudio/UI/StartWindow.pro</value>
+=======
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:D:/BCIT/Semester 4/COMP 4985 - Data Communications &amp; Networking/assign3/StartWindow/UI/StartWindow.pro</value>
+>>>>>>> aaaf5bd2a8a7058d299b4b03ae2d99367e73fb0e
     <value type="bool" key="QmakeProjectManager.QmakeRunConfiguration.UseLibrarySearchPath">true</value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.CommandLineArguments"></value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.ProFile">StartWindow.pro</value>
