@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QDir>
 #include <QThread>
+#include <QMessageBox>
 #include "audiomanager.h"
 #include "audiothread.h"
 
@@ -22,25 +23,31 @@ public:
     ~MultiServer();
 
 private slots:
-    void on_pushButton_4_released();
-
     void on_buttonStopAudio_released();
 
     void on_buttonPauseAudio_released();
-
-    void on_sliderSound_actionTriggered(int action);
 
     void on_QueueAddButton_released();
 
     void on_QueueRemoveButton_released();
 
     void playNextSong();
-    void updateStatusBar(QString msg);
+
+    void AddStatusMessage(QString msg);
+
+    void on_buttonDisconnect_released();
+
+    void on_buttonPlay_released();
+
+    void successfulConnection(bool connected);
 
 private:
+    bool isDataSending = true;
     Ui::MultiServer *ui;
     AudioManager *audioManager;
     int currentQueueIndex;
+    AudioThread *deviceListener;
+    bool stopThreadLoop = false;
 };
 
 #endif // MULTISERVER_H
