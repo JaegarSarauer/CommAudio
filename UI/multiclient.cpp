@@ -1,6 +1,7 @@
 #include "multiclient.h"
 #include "ui_multiclient.h"
 
+
 MultiClient::MultiClient(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MultiClient)
@@ -12,3 +13,10 @@ MultiClient::~MultiClient()
 {
     delete ui;
 }
+
+void MultiClient::on_buttonPlay_released()
+{
+}
+
+
+
