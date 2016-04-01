@@ -18,14 +18,16 @@ SOURCES += main.cpp\
     audiomanager.cpp \
     audiothread.cpp \
     peertopeer.cpp \
-    multiclient.cpp
+    multiclient.cpp \
+    microphonemanager.cpp
 
 HEADERS  += startwindow.h \
     multiserver.h \
     audiomanager.h \
     audiothread.h \
     peertopeer.h \
-    multiclient.h
+    multiclient.h \
+    microphonemanager.h
 
 FORMS    += startwindow.ui \
     multiserver.ui \
