@@ -8,17 +8,20 @@ class AudioPlayThread : public QObject
 {
     Q_OBJECT
 public:
-    AudioPlayThread(CircularBuffer * buf){
-        buffer = buf;
-    }
-    void checkBuffer();
+    AudioPlayThread(CircularBuffer * buf);
+    //AudioPlayThread();
 
 signals:
     void addMoreData();
+    void finished();
+    void bufferHasData();
+
+public slots:
+    void checkBuffer();
 
 private:
     CircularBuffer * buffer;
-
+    bool stopChecking;
 };
 
 #endif // AUDIOPLAYTHREAD_H

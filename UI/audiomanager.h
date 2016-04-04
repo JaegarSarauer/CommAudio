@@ -29,9 +29,6 @@ public:
     bool isPaused();
     bool isPlaying();
 
-    void loadDataIntoBuffer();
-    void writeDataToDevice();
-
     ~AudioManager();
 
 private:
@@ -41,13 +38,18 @@ private:
     QAudioOutput *audio;
     QObject *parent;
     QFile *file;
-    QIODevice *device;
     double constantVolume = 1.0;
     CircularBuffer * audioBuf;
     AudioPlayThread * bufferListener;
 
 signals:
     void finishedLoading();
+    void finishedReading();
+    void finishedWriting();
+
+private slots:
+    void loadDataIntoBuffer();
+    void writeDataToDevice();
 };
 
 typedef struct  WAV_HEADER

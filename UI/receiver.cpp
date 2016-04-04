@@ -277,7 +277,7 @@ void CALLBACK udpRoutine(DWORD errorCode, DWORD bytesTransferred, LPOVERLAPPED o
     if (bytesTransferred > 0)
     {
         //EnterCriticalSection(&bufferAccess);
-        audioBuffer->cbWrite(socketInfo->DataBuf.buf);
+        audioBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len);
         //LeaveCriticalSection(&bufferAccess);
     }
 }
