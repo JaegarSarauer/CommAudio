@@ -1,6 +1,8 @@
 #include "peertopeer.h"
 #include "ui_peertopeer.h"
 
+QThread *audioThread;
+
 PeerToPeer::PeerToPeer(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::PeerToPeer)
@@ -143,18 +145,24 @@ void PeerToPeer::playNextSong() {
     QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
     current->setBackgroundColor(Qt::green);
     audioManager->setupAudioPlayer(new QFile(current->text()));
-    QIODevice * device = audioManager->playAudio();
+    QIODevice * file = audioManager->playAudio();
 
-    QThread *audioThread = new QThread( );
-    deviceListener = new AudioThread(device);
+    if (audioThread)
+    {
+        delete audioThread;
+    }
+    audioThread = new QThread( );
+    deviceListener = new AudioThread(file);
     deviceListener->moveToThread(audioThread);
 
     connect( audioThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
     //connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
-    //connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+    //connect( audio, SIGNAL(stateChanged(QAudio::State)), deviceListener, SLOT(checkForEnding(QAudio::State)));
     //automatically delete thread and deviceListener object when work is done:
     connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
     connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
     audioThread->start();
+
 }
 

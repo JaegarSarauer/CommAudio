@@ -93,7 +93,7 @@ void MultiServer::playNextSong() {
     QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
     current->setBackgroundColor(Qt::green);
     audioManager->setupAudioPlayer(new QFile(current->text()));
-    QIODevice * device = audioManager->playAudio();
+    /*QIODevice * device = audioManager->playAudio();
 
     QThread *audioThread = new QThread( );
     deviceListener = new AudioThread(device);
@@ -105,7 +105,7 @@ void MultiServer::playNextSong() {
     //automatically delete thread and deviceListener object when work is done:
     connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
     connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
-    audioThread->start();
+    audioThread->start();*/
 }
 
 /*

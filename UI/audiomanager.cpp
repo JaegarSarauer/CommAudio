@@ -45,7 +45,7 @@ void AudioManager::loadDataIntoBuffer()
 }
 
 void AudioManager::writeDataToDevice() {
-    if (!device)
+    if (device == NULL)
     {
         device = audio->start();
 
@@ -63,12 +63,27 @@ void AudioManager::writeDataToDevice() {
     if (!file->atEnd())
     {
        loadDataIntoBuffer();
+    } else {
+        file->close();
+        //signal to peer2peer to load next file?????
     }
 }
 
 QIODevice *AudioManager::playAudio() {
     if (!PAUSED) {
-        QThread *playThread = new QThread( );
+        if (!playThread)
+        {
+            playThread = new QThread( );
+        } else {
+            if (playThread->isRunning())
+            {
+                //stop thread
+                playThread->terminate();
+                delete playThread;
+                playThread = new QThread();
+            }
+        }
+        device = NULL;
         bufferListener = new AudioPlayThread(audioBuf);
         bufferListener->moveToThread(playThread);
 
@@ -76,6 +91,8 @@ QIODevice *AudioManager::playAudio() {
         connect( playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()) );
         connect( this, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()) );
         connect( bufferListener, SIGNAL(bufferHasData()), this, SLOT(writeDataToDevice()));
+
+        //connect (audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(checkDeviceStatus(QAudio::State)));
 
         //connect( this, SIGNAL(finishedReading()), bufferListener, SLOT(stop()) );
 
@@ -93,6 +110,15 @@ QIODevice *AudioManager::playAudio() {
     PAUSED = false;
     return file;
 }
+
+/*void AudioManager::checkSongFinished(QAudio::State state)
+{
+    if (state == QAudio::StoppedState && file->atEnd())
+    {
+        //kill thread!!!!
+
+    }
+}*/
 
 void AudioManager::setVolume(double volume) {
     constantVolume = volume;
