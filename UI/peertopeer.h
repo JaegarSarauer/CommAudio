@@ -5,8 +5,13 @@
 #include <QMessageBox>
 #include <QDir>
 #include "peertopeer.h"
+#include <QFile>
+#include <QDir>
+#include <QThread>
+#include <QMessageBox>
 #include "audiomanager.h"
 #include "audiothread.h"
+#include "microphonemanager.h"
 
 namespace Ui {
 class PeerToPeer;
@@ -19,9 +24,6 @@ class PeerToPeer : public QMainWindow
 public:
     explicit PeerToPeer(QWidget *parent = 0);
     ~PeerToPeer();
-
-private:
-    void AddStatusMessage(const QString msg);
 
 private slots:
     void on_sliderSound_actionTriggered(int action);
@@ -36,27 +38,32 @@ private slots:
 
     void on_QueueAddButton_released();
 
-    //void on_QueueRemoveButton_released();
-
     void playNextSong();
 
-    //void on_buttonDisconnect_released();
+    void AddStatusMessage(const QString msg);
+
+    void on_QueueRemoveButton_released();
+
+    void successfulConnection(bool connected);
+
+    void on_buttonDisconnect_released();
 
     void on_buttonPlay_released();
 
-    //void successfulConnection(bool connected);
+    void on_SendMicrophone_released();
 
-    //void on_SendAudioButton_released();
-
-    //void on_StopSendingButton_released();
+signals:
+    void stopMicrophoneRecording();
 
 private:
+    MicrophoneManager *mic;
     Ui::PeerToPeer *ui;
     bool isDataSending = true;
     AudioManager *audioManager;
     int currentQueueIndex;
     AudioThread *deviceListener;
     bool stopThreadLoop = false;
+    bool isMicrophoneSending = false;
 };
 
 #endif // PEERTOPEER_H
