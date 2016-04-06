@@ -64,6 +64,7 @@ private:
     AudioThread *deviceListener;
     bool stopThreadLoop = false;
     bool isMicrophoneSending = false;
+    QThread *audioThread;
 };
 
 #endif // PEERTOPEER_H

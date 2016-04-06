@@ -2,8 +2,6 @@
 #include "ui_peertopeer.h"
 #include <QtDebug>
 
-QThread *audioThread;
-
 /*
  * Constructor for the multiserver window class.
  */
@@ -18,9 +16,8 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
     currentQueueIndex = -1;
 }
 
-
 /*
- * Destructor for the multi server window class.
+ * Destructor for the peer to peer window class.
  */
 PeerToPeer::~PeerToPeer()
 {
@@ -210,17 +207,14 @@ void PeerToPeer::playNextSong() {
     audioManager->setupAudioPlayer(new QFile(current->text()));
     QIODevice * file = audioManager->playAudio();
 
-    if (audioThread)
-    {
-        delete audioThread;
-    }
-    audioThread = new QThread( );
+    audioThread = new QThread();
     deviceListener = new AudioThread(file);
     deviceListener->moveToThread(audioThread);
 
     connect( audioThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
     //connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
     connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), audioThread, SLOT(quit()));
     //connect( audio, SIGNAL(stateChanged(QAudio::State)), deviceListener, SLOT(checkForEnding(QAudio::State)));
     //automatically delete thread and deviceListener object when work is done:
     connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
