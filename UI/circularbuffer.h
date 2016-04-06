@@ -8,8 +8,8 @@ class CircularBuffer : public QObject
     Q_OBJECT
 public:
     CircularBuffer(int size, int blocks);
-    bool cbWrite(const char * data);
-    QByteArray * cbRead(int blocksToRead);
+    bool cbWrite(const char * data, size_t length);
+    char * cbRead(int blocksToRead);
     bool isEmpty();
     bool isFull();
     int getBlocksUnread();
@@ -22,6 +22,7 @@ private:
     int numOfBlocks;
     int blocksUnread;
     bool reading;
+    int bufferSize;
 signals:
     void stopWriting();
     void startReading();

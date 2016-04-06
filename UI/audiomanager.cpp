@@ -1,11 +1,14 @@
 #include "audiomanager.h"
+#include <iostream>
+
+    QIODevice *device;
+    QThread *playThread;
 
 bool AudioManager::setupAudioPlayer(QFile * f) {
     file = f;
     wav_hdr wavHeader;
     file->open(QIODevice::ReadOnly);
     int bytesRead = file->read((char*)&wavHeader, sizeof(wav_hdr));
-    //file->close();
     if (bytesRead <= 0)
         return false;
 
@@ -16,8 +19,11 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
     format.setCodec("audio/pcm");
     format.setByteOrder(QAudioFormat::LittleEndian);
     format.setSampleType(QAudioFormat::UnSignedInt);
+
     audio = new QAudioOutput(format, parent);
     audio->setVolume(constantVolume);
+    audio->setBufferSize(40960);
+
     audioBuf = new CircularBuffer(4096, 100);
     return true;
 }
@@ -25,43 +31,76 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
 void AudioManager::loadDataIntoBuffer()
 {
     char tempBuf[4096];
-    int bytesRead = file->read((char*)&tempBuf, sizeof(tempBuf));
-    if (bytesRead <= 0)
+    if(!audioBuf->isFull())
     {
-        //probably need to do more here
-        return;
-        //emit finished signal
+        int bytesRead = file->read((char*)&tempBuf, sizeof(tempBuf));
+        if (bytesRead <= 0)
+        {
+            emit finishedReading();
+            //file->close();
+        }
+        audioBuf->cbWrite(tempBuf, 4096);
+        //emit finishedLoading();
     }
-    audioBuf->cbWrite(tempBuf);
-    emit finishedLoading();
 }
 
 void AudioManager::writeDataToDevice() {
-    if (device == nullptr)
+    if (device == NULL)
     {
         device = audio->start();
+
     }
-    QByteArray * data = audioBuf->cbRead(1);
-    device->write(data->data(), 4096);
+    int freeSpace = audio->bytesFree();
+    if (freeSpace < 4096)
+    {
+        emit finishedWriting();
+        return;
+    } else {
+        char * data = audioBuf->cbRead(1);
+        device->write(data, 4096);
+        emit finishedWriting();
+    }
+    if (!file->atEnd())
+    {
+       loadDataIntoBuffer();
+    } else {
+        file->close();
+        //signal to peer2peer to load next file?????
+    }
 }
 
 QIODevice *AudioManager::playAudio() {
     if (!PAUSED) {
-        //file->open(QIODevice::ReadOnly);
-        //device = file;
-        //audio->start(device);
-        QThread *playThread = new QThread( );
+        if (!playThread)
+        {
+            playThread = new QThread( );
+        } else {
+            if (playThread->isRunning())
+            {
+                //stop thread
+                playThread->terminate();
+                delete playThread;
+                playThread = new QThread();
+            }
+        }
+        device = NULL;
         bufferListener = new AudioPlayThread(audioBuf);
         bufferListener->moveToThread(playThread);
 
         connect( playThread, SIGNAL(started()), this, SLOT(loadDataIntoBuffer()) );
-        connect( this, SIGNAL(finishedLoading()), bufferListener, SLOT(checkBuffer()) );
-        connect( this, SIGNAL(finishedLoading()), this, SLOT(writeDataToDevice()));
-        connect( bufferListener, SIGNAL(addMoreData()), this, SLOT(loadDataIntoBuffer()) );
+        connect( playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()) );
+        connect( this, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()) );
+        connect( bufferListener, SIGNAL(bufferHasData()), this, SLOT(writeDataToDevice()));
+
+        //connect (audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(checkDeviceStatus(QAudio::State)));
+
+        //connect( this, SIGNAL(finishedReading()), bufferListener, SLOT(stop()) );
+
+        //connect(bufferListener, SIGNAL(finished()), playThread, SLOT(quit()));
 
         //automatically delete thread and deviceListener object when work is done:
-        //connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
-        //connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
+        //connect( playThread, SIGNAL(finished()), bufferListener, SLOT(deleteLater()) );
+        //connect( playThread, SIGNAL(finished()), playThread, SLOT(deleteLater()) );
         playThread->start();
 
     } else {
@@ -69,8 +108,17 @@ QIODevice *AudioManager::playAudio() {
     }
     PLAYING = true;
     PAUSED = false;
-    return device;
+    return file;
 }
+
+/*void AudioManager::checkSongFinished(QAudio::State state)
+{
+    if (state == QAudio::StoppedState && file->atEnd())
+    {
+        //kill thread!!!!
+
+    }
+}*/
 
 void AudioManager::setVolume(double volume) {
     constantVolume = volume;
@@ -79,7 +127,7 @@ void AudioManager::setVolume(double volume) {
 
 void AudioManager::stopAudio() {
     audio->stop();
-    file->close();
+    //file->close();
     delete audio;
     PAUSED = false;
     PLAYING = false;

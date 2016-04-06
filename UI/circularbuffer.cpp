@@ -6,27 +6,30 @@ CircularBuffer::CircularBuffer(int size, int blocks)
     blockSize = size;
     numOfBlocks = blocks;
     buffer = new QByteArray(blockSize * numOfBlocks, '\0');
+    bufferSize = buffer->size();
     readPos = 0;
     writePos = 0;
     reading = false;
     blocksUnread = 0;
 }
 
-QByteArray * CircularBuffer::cbRead(int blocksToRead)
+char * CircularBuffer::cbRead(int blocksToRead)
 {
     int oldReadPos = readPos;
-    blocksUnread += blocksToRead;
+    blocksUnread -= blocksToRead;
     readPos += blockSize * blocksToRead;
     if (readPos == blockSize * numOfBlocks)
     {
         readPos = 0;
     }
-    return &buffer[oldReadPos];
+    //return &buffer[oldReadPos];
+    return &(buffer->data()[oldReadPos]);
 }
 
-bool CircularBuffer::cbWrite(const char * data)
+bool CircularBuffer::cbWrite(const char * data, size_t length)
 {
-    if (strlen(data) > blockSize)
+    size_t datalen = strlen(data);
+    if (datalen > blockSize )
     {
         //error
         return false;
@@ -38,7 +41,7 @@ bool CircularBuffer::cbWrite(const char * data)
     }
     else
     {
-        buffer->insert(writePos, data);
+        buffer->insert(writePos, data, length);
         blocksUnread++;
         writePos += blockSize;
         if (writePos == blockSize * numOfBlocks) //reached the end
@@ -51,7 +54,7 @@ bool CircularBuffer::cbWrite(const char * data)
 
 bool CircularBuffer::isEmpty()
 {
-    return (readPos == writePos && blocksUnread == 0);
+    return (blocksUnread == 0);
 }
 
 bool CircularBuffer::isFull()

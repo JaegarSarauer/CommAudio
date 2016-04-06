@@ -38,9 +38,9 @@ void NetworkAudioPlayer::setParameters()
 void NetworkAudioPlayer::playAudio()
 {
     EnterCriticalSection(&bufferAccess);
-    QByteArray * data = audioBuffer->cbRead(0.1 * MAX_BLOCKS);
+    char * data = audioBuffer->cbRead(0.1 * MAX_BLOCKS);
     LeaveCriticalSection(&bufferAccess);
-    outputBuffer[0].setBuffer(data);
+    outputBuffer[0].setData(data);
     outputBuffer[0].open(QIODevice::ReadOnly);
     second = true;
     if ((audioDevice->write(outputBuffer[0].buffer()) == -1))
