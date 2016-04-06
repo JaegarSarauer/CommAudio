@@ -1,7 +1,6 @@
 #include "audiomanager.h"
 #include <iostream>
 
-    QIODevice *device;
     QThread *playThread;
 
 bool AudioManager::setupAudioPlayer(QFile * f) {
@@ -41,15 +40,11 @@ void AudioManager::loadDataIntoBuffer()
         }
         audioBuf->cbWrite(tempBuf, 4096);
         //emit finishedLoading();
+
     }
 }
 
 void AudioManager::writeDataToDevice() {
-    if (device == NULL)
-    {
-        device = audio->start();
-
-    }
     int freeSpace = audio->bytesFree();
     if (freeSpace < 4096)
     {
@@ -60,55 +55,56 @@ void AudioManager::writeDataToDevice() {
         device->write(data, 4096);
         emit finishedWriting();
     }
+
     if (!file->atEnd())
     {
        loadDataIntoBuffer();
     } else {
         file->close();
+        qDebug() << "WHAT";
         //signal to peer2peer to load next file?????
     }
 }
 
+QThread *audioThread;
+
+void AudioManager::playNextSong() {
+    playAudio();
+}
+
 QIODevice *AudioManager::playAudio() {
     if (!PAUSED) {
-        if (!playThread)
-        {
             playThread = new QThread( );
-        } else {
-            if (playThread->isRunning())
-            {
-                //stop thread
-                playThread->terminate();
-                delete playThread;
-                playThread = new QThread();
-            }
-        }
-        device = NULL;
-        bufferListener = new AudioPlayThread(audioBuf);
-        bufferListener->moveToThread(playThread);
+            qDebug() << "YEP";
+            bufferListener = new AudioPlayThread(audioBuf);
+            bufferListener->moveToThread(playThread);
 
-        connect( playThread, SIGNAL(started()), this, SLOT(loadDataIntoBuffer()) );
-        connect( playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()) );
-        connect( this, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()) );
-        connect( bufferListener, SIGNAL(bufferHasData()), this, SLOT(writeDataToDevice()));
+            connect( playThread, SIGNAL(started()), this, SLOT(loadDataIntoBuffer()) );
+            connect( playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()) );
+            connect( this, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()) );
+            connect( bufferListener, SIGNAL(bufferHasData()), this, SLOT(writeDataToDevice()));
 
-        //connect (audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(checkDeviceStatus(QAudio::State)));
 
-        //connect( this, SIGNAL(finishedReading()), bufferListener, SLOT(stop()) );
+            audioThread = new QThread( );
+            deviceListener = new AudioThread(audio);
+            deviceListener->moveToThread(audioThread);
 
-        //connect(bufferListener, SIGNAL(finished()), playThread, SLOT(quit()));
-
-        //automatically delete thread and deviceListener object when work is done:
-        //connect( playThread, SIGNAL(finished()), bufferListener, SLOT(deleteLater()) );
-        //connect( playThread, SIGNAL(finished()), playThread, SLOT(deleteLater()) );
-        playThread->start();
-
+            connect( audioThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
+            //connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
+            //connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+            //connect( audio, SIGNAL(stateChanged(QAudio::State)), deviceListener, SLOT(checkForEnding(QAudio::State)));
+            //automatically delete thread and deviceListener object when work is done:
+            connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
+            connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
+            playThread->start();
+            audioThread->start();
+            device = audio->start();
     } else {
         unpauseAudio();
     }
     PLAYING = true;
     PAUSED = false;
-    return file;
+    return device;
 }
 
 /*void AudioManager::checkSongFinished(QAudio::State state)
@@ -127,7 +123,7 @@ void AudioManager::setVolume(double volume) {
 
 void AudioManager::stopAudio() {
     audio->stop();
-    //file->close();
+    file->close();
     delete audio;
     PAUSED = false;
     PLAYING = false;

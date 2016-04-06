@@ -2,7 +2,7 @@
 #include "ui_peertopeer.h"
 #include <QtDebug>
 
-QThread *audioThread;
+
 
 /*
  * Constructor for the multiserver window class.
@@ -12,9 +12,12 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
     ui(new Ui::PeerToPeer)
 {
     ui->setupUi(this);
+    if (!QDir(QDir::currentPath() + "/MusicFiles").exists())
+        QDir().mkdir(QDir::currentPath() + "/MusicFiles");
     audioManager = new AudioManager(this);
-    QDir dir;
+    QDir dir = (QDir::currentPath() + "/MusicFiles/");
     ui->listMusicFiles->addItems(dir.entryList(QStringList("*.wav")));
+
     currentQueueIndex = -1;
 }
 
@@ -183,8 +186,8 @@ void PeerToPeer::on_DataSendingButton_released()
  */
 void PeerToPeer::playNextSong() {
     if (stopThreadLoop) {
-        disconnect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
-        disconnect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+        //disconnect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
+        //disconnect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
         stopThreadLoop = false;
         return;
     }
@@ -208,22 +211,13 @@ void PeerToPeer::playNextSong() {
     QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
     current->setBackgroundColor(Qt::green);
     audioManager->setupAudioPlayer(new QFile(current->text()));
-    QIODevice * file = audioManager->playAudio();
+    audioManager->playAudio();
 
-    if (audioThread)
-    {
-        delete audioThread;
-    }
-    audioThread = new QThread( );
-    deviceListener = new AudioThread(file);
-    deviceListener->moveToThread(audioThread);
+}
 
-    connect( audioThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
-    //connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
-    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
-    //connect( audio, SIGNAL(stateChanged(QAudio::State)), deviceListener, SLOT(checkForEnding(QAudio::State)));
-    //automatically delete thread and deviceListener object when work is done:
-    connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
-    connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
-    audioThread->start();
+void PeerToPeer::on_OpenPathButton_released()
+{
+    ui->listMusicFiles->addItems(QFileDialog::getOpenFileNames(this, tr("Open Wav files."),
+                                                    QDir::currentPath() + "/MusicFiles",
+                                                    tr("Wav Files (*.wav)")));
 }

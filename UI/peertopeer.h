@@ -9,6 +9,7 @@
 #include <QDir>
 #include <QThread>
 #include <QMessageBox>
+#include <QFileDialog>
 #include "audiomanager.h"
 #include "audiothread.h"
 #include "microphonemanager.h"
@@ -52,6 +53,8 @@ private slots:
 
     void on_SendMicrophone_released();
 
+    void on_OpenPathButton_released();
+
 signals:
     void stopMicrophoneRecording();
 
@@ -61,7 +64,6 @@ private:
     bool isDataSending = true;
     AudioManager *audioManager;
     int currentQueueIndex;
-    AudioThread *deviceListener;
     bool stopThreadLoop = false;
     bool isMicrophoneSending = false;
 };

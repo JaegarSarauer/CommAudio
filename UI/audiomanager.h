@@ -6,11 +6,13 @@
 #include <QFile>
 #include <QThread>
 #include <QAudioOutput>
+#include <QDebug>
 
 #include <inttypes.h>
 
 #include "circularbuffer.h"
 #include "audioplaythread.h"
+#include "audiothread.h"
 
 class AudioManager : public QObject
 {
@@ -31,6 +33,9 @@ public:
 
     ~AudioManager();
 
+
+    QIODevice *device;
+
 private:
     bool PAUSED = false;
     bool PLAYING = false;
@@ -41,6 +46,8 @@ private:
     double constantVolume = 1.0;
     CircularBuffer * audioBuf;
     AudioPlayThread * bufferListener;
+    AudioThread *deviceListener;
+
 
 signals:
     void finishedLoading();
@@ -50,6 +57,7 @@ signals:
 private slots:
     void loadDataIntoBuffer();
     void writeDataToDevice();
+    void playNextSong();
 };
 
 typedef struct  WAV_HEADER
