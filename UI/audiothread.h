@@ -4,24 +4,26 @@
 
 #include <QObject>
 #include <QIODevice>
+#include <QAudio>
+#include <QAudioOutput>
 
 
 class AudioThread : public QObject
 {
     Q_OBJECT
 public:
-    AudioThread(QIODevice * aD) : audioDevice(aD) {}
+    AudioThread(QIODevice * aD) : audioFile(aD) {}
     //AudioThread();
     ~AudioThread() {}
 
 public slots:
-    void doWork();
+    void checkForEnding();
 
 signals:
-    void workFinished();
+    void workFinished(const QString msg);
 
 private:
-    QIODevice * audioDevice;
+    QIODevice * audioFile;
 
 };
 

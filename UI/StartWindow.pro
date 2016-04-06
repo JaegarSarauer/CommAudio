@@ -16,12 +16,36 @@ SOURCES += main.cpp\
         startwindow.cpp \
     multiserver.cpp \
     audiomanager.cpp \
-    audiothread.cpp
+    audiothread.cpp \
+    receiver.cpp \
+    networkmanager.cpp \
+    circularbuffer.cpp \
+    globalobjects.cpp \
+    networkaudioplayer.cpp \
+    sender.cpp \
+    peertopeer.cpp \
+    multiclient.cpp \
+    audioplaythread.cpp \
+    microphonemanager.cpp
 
 HEADERS  += startwindow.h \
     multiserver.h \
     audiomanager.h \
-    audiothread.h
+    audiothread.h \
+    receiver.h \
+    networkmanager.h \
+    circularbuffer.h \
+    globalobjects.h \
+    networkaudioplayer.h \
+    sender.h \
+    peertopeer.h \
+    multiclient.h \
+    audioplaythread.h \
+    microphonemanager.h
 
 FORMS    += startwindow.ui \
-    multiserver.ui
+    multiserver.ui \
+    peertopeer.ui \
+    multiclient.ui
+
+LIBS += -lws2_32

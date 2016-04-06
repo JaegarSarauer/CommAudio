@@ -5,9 +5,7 @@
 
 //}
 
-void AudioThread::doWork() {
-    while(!audioDevice->atEnd()) {
-        qDebug() << "Not at end";
-    }
-    emit workFinished();
+void AudioThread::checkForEnding() {
+    while(!audioFile->atEnd()) {}
+    emit workFinished(QString("Song finished, playing next song."));
 }
