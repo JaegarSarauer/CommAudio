@@ -6,6 +6,7 @@
 //}
 
 void AudioThread::checkForEnding() {
-    while(!audioFile->atEnd()) {}
+    while (audioPlayer->state() != QAudio::ActiveState) {}
+    while (audioPlayer->state() != QAudio::IdleState) {}
     emit workFinished(QString("Song finished, playing next song."));
 }

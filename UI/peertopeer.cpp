@@ -10,9 +10,12 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
     ui(new Ui::PeerToPeer)
 {
     ui->setupUi(this);
+    if (!QDir(QDir::currentPath() + "/MusicFiles").exists())
+        QDir().mkdir(QDir::currentPath() + "/MusicFiles");
     audioManager = new AudioManager(this);
-    QDir dir;
+    QDir dir = (QDir::currentPath() + "/MusicFiles/");
     ui->listMusicFiles->addItems(dir.entryList(QStringList("*.wav")));
+
     currentQueueIndex = -1;
 }
 
@@ -205,10 +208,10 @@ void PeerToPeer::playNextSong() {
     QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
     current->setBackgroundColor(Qt::green);
     audioManager->setupAudioPlayer(new QFile(current->text()));
-    QIODevice * file = audioManager->playAudio();
+    QAudioOutput * audio = audioManager->playAudio();
 
     audioThread = new QThread();
-    deviceListener = new AudioThread(file);
+    deviceListener = new AudioThread(audio);
     deviceListener->moveToThread(audioThread);
 
     connect( audioThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
@@ -220,4 +223,11 @@ void PeerToPeer::playNextSong() {
     connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
     connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
     audioThread->start();
+}
+
+void PeerToPeer::on_OpenPathButton_released()
+{
+    ui->listMusicFiles->addItems(QFileDialog::getOpenFileNames(this, tr("Open Wav files."),
+                                                    QDir::currentPath() + "/MusicFiles",
+                                                    tr("Wav Files (*.wav)")));
 }

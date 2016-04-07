@@ -12,7 +12,7 @@ class AudioThread : public QObject
 {
     Q_OBJECT
 public:
-    AudioThread(QIODevice * aD) : audioFile(aD) {}
+    AudioThread(QAudioOutput * aD) : audioPlayer(aD) {}
     //AudioThread();
     ~AudioThread() {}
 
@@ -23,7 +23,7 @@ signals:
     void workFinished(const QString msg);
 
 private:
-    QIODevice * audioFile;
+    QAudioOutput * audioPlayer;
 
 };
 
