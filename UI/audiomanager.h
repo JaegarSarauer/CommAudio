@@ -20,7 +20,7 @@ public:
         audio = new QAudioOutput(QAudioFormat(), p);
     }
 
-    QIODevice * playAudio();
+    QAudioOutput * playAudio();
     bool setupAudioPlayer(QFile * file);
     void setVolume(double volume);
     void stopAudio();

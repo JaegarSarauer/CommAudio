@@ -45,6 +45,11 @@ void AudioManager::loadDataIntoBuffer()
 }
 
 void AudioManager::writeDataToDevice() {
+    if (audio == NULL) {
+        file->close();
+        emit finishedReading();
+        return;
+    }
     if (device == NULL)
     {
         device = audio->start();
@@ -69,7 +74,7 @@ void AudioManager::writeDataToDevice() {
     }
 }
 
-QIODevice *AudioManager::playAudio() {
+QAudioOutput *AudioManager::playAudio() {
     if (!PAUSED) {
         if (!playThread)
         {
@@ -108,7 +113,7 @@ QIODevice *AudioManager::playAudio() {
     }
     PLAYING = true;
     PAUSED = false;
-    return file;
+    return audio;
 }
 
 /*void AudioManager::checkSongFinished(QAudio::State state)
