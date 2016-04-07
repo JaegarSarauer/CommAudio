@@ -1,4 +1,8 @@
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#include <windows.h>
 #include "networkmanager.h"
+
 
 SOCKET udpSocket;
 SOCKET tcpSocket;
@@ -29,7 +33,7 @@ bool NetworkManager::startNetwork()
         return false;
     }*/
 
-    if ((tcpSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
+    /*if ((tcpSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
     {
         //display error
         return false;
@@ -39,7 +43,50 @@ bool NetworkManager::startNetwork()
     {
         //display error
         return false;
+    }*/
+
+    return true;
+}
+
+bool NetworkManager::createMulticastServerSocket()
+{
+    struct ip_mreq stMreq;
+    SOCKADDR_IN stLclAddr, stDstAddr;
+    BOOL  fFlag = FALSE;
+
+    if ((udpSocket = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
+    {
+        //display error
+        return false;
     }
+    stLclAddr.sin_family = AF_INET;
+    stLclAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    stLclAddr.sin_port = 0;
+    if (bind(udpSocket, (struct sockaddr*) &stLclAddr, sizeof(stLclAddr)) == SOCKET_ERROR)
+    {
+        //display error
+        return false;
+    }
+
+    stMreq.imr_multiaddr.s_addr = inet_addr("234.5.6.7");
+    stMreq.imr_interface.s_addr = INADDR_ANY;
+    if (setsockopt(udpSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&stMreq, sizeof(stMreq)) == SOCKET_ERROR)
+    {
+        //display error
+        return false;
+    }
+
+    /* Disable loopback */
+    if (setsockopt(udpSocket, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&fFlag, sizeof(fFlag)) == SOCKET_ERROR)
+    {
+        //display error
+        return false;
+    }
+
+    /* Assign our destination address */
+    stDstAddr.sin_family = AF_INET;
+    stDstAddr.sin_addr.s_addr = inet_addr("234.5.6.7");
+    stDstAddr.sin_port = htons(7000);
 
     return true;
 }

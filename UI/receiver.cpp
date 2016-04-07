@@ -1,4 +1,19 @@
+#include <WinSock2.h>
+#include <windows.h>
 #include "receiver.h"
+
+typedef struct _SOCKET_INFORMATION {
+    OVERLAPPED Overlapped;
+    SOCKET Socket;
+    CHAR Buffer[DATA_BUFSIZE];
+    int head = 0;
+    int tail = 0;
+    WSABUF DataBuf;
+    DWORD Timeout;
+
+} SOCKET_INFORMATION, *LPSOCKET_INFORMATION;
+
+
 
 DWORD WINAPI udpThread(LPVOID lpParameter);
 DWORD WINAPI startUDPServer(LPVOID n);
@@ -277,7 +292,7 @@ void CALLBACK udpRoutine(DWORD errorCode, DWORD bytesTransferred, LPOVERLAPPED o
     if (bytesTransferred > 0)
     {
         //EnterCriticalSection(&bufferAccess);
-        audioBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len);
+        //audioBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len);
         //LeaveCriticalSection(&bufferAccess);
     }
 }

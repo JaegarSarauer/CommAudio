@@ -9,6 +9,9 @@
 #include <QMessageBox>
 #include "audiomanager.h"
 #include "audiothread.h"
+#include "networkmanager.h"
+#include "receiver.h"
+#include "networkaudioplayer.h"
 
 namespace Ui {
 class MultiServer;
@@ -23,10 +26,6 @@ public:
     ~MultiServer();
 
 private slots:
-    void on_buttonStopAudio_released();
-
-    void on_buttonPauseAudio_released();
-
     void on_QueueAddButton_released();
 
     void on_QueueRemoveButton_released();
@@ -35,15 +34,13 @@ private slots:
 
     void AddStatusMessage(QString msg);
 
-    void on_buttonDisconnect_released();
-
-    void on_buttonPlay_released();
-
     void successfulConnection(bool connected);
 
     void on_SendAudioButton_released();
 
     void on_StopSendingButton_released();
+
+    void on_BroadcastButton_released();
 
 private:
     bool isDataSending = true;
@@ -52,6 +49,8 @@ private:
     int currentQueueIndex;
     AudioThread *deviceListener;
     bool stopThreadLoop = false;
+    NetworkAudioPlayer * netAudioPlayer;
+    NetworkManager * netManager;
 };
 
 #endif // MULTISERVER_H

@@ -20,7 +20,6 @@ SOURCES += main.cpp\
     receiver.cpp \
     networkmanager.cpp \
     circularbuffer.cpp \
-    globalobjects.cpp \
     networkaudioplayer.cpp \
     sender.cpp \
     peertopeer.cpp \
@@ -35,7 +34,6 @@ HEADERS  += startwindow.h \
     receiver.h \
     networkmanager.h \
     circularbuffer.h \
-    globalobjects.h \
     networkaudioplayer.h \
     sender.h \
     peertopeer.h \
@@ -47,5 +45,3 @@ FORMS    += startwindow.ui \
     multiserver.ui \
     peertopeer.ui \
     multiclient.ui
-
-LIBS += -lws2_32
