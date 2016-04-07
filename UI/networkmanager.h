@@ -18,6 +18,8 @@ public:
     void cleanUp();
     void setupUDPforP2P();
     bool createMulticastServerSocket();
+    void startUDPReceiver(int port);
+    void startTCPReceiver(int port);
 
     bool tcpConnected;
 private:
