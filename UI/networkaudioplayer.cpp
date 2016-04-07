@@ -1,4 +1,5 @@
 #include "networkaudioplayer.h"
+#include "networkmanager.h"
 
 NetworkAudioPlayer::NetworkAudioPlayer()
 {

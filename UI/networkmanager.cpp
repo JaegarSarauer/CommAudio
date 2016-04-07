@@ -3,10 +3,35 @@
 #include <windows.h>
 #include "networkmanager.h"
 
+typedef struct _SOCKET_INFORMATION {
+    OVERLAPPED Overlapped;
+    SOCKET Socket;
+    CHAR Buffer[DATA_BUFSIZE];
+    int head = 0;
+    int tail = 0;
+    WSABUF DataBuf;
+    DWORD Timeout;
+
+} SOCKET_INFORMATION, *LPSOCKET_INFORMATION;
 
 SOCKET udpSocket;
 SOCKET tcpSocket;
-struct sockaddr_in udpPeer;
+struct sockaddr_in udpPeer, tcpPeer;
+SOCKET tcpAcceptSocket;
+BOOL serverRunning = false;
+int uPort, tPort;
+HANDLE hWriteFile, hServerLogFile;
+WSAEVENT udpEvent, tcpEvent;
+
+DWORD WINAPI udpThread(LPVOID lpParameter);
+DWORD WINAPI startUDPServer(LPVOID n);
+void CALLBACK udpRoutine(DWORD, DWORD, LPOVERLAPPED, DWORD);
+DWORD WINAPI tcpThread(LPVOID lpParameter);
+DWORD WINAPI startTCPServer(LPVOID n);
+void CALLBACK tcpRoutine(DWORD, DWORD, LPOVERLAPPED, DWORD);
+void sendViaTCP();
+void sendViaUDP();
+
 
 bool NetworkManager::startNetwork()
 {
@@ -96,9 +121,9 @@ void NetworkManager::connectViaTCP(char * hostname, int port)
     struct hostent	*hp;
 
     // Store server's information
-    memset((char *)&peer, 0, sizeof(peer));
-    peer.sin_family = AF_INET;
-    peer.sin_port = htons(port);
+    memset((char *)&tcpPeer, 0, sizeof(tcpPeer));
+    tcpPeer.sin_family = AF_INET;
+    tcpPeer.sin_port = htons(port);
 
     if ((hp = gethostbyname(hostname)) == NULL)
     {
@@ -106,8 +131,8 @@ void NetworkManager::connectViaTCP(char * hostname, int port)
         return;
     }
 
-    memcpy((char *)&peer.sin_addr, hp->h_addr, hp->h_length);
-    if (connect(tcpSocket, (struct sockaddr *)&peer, sizeof(peer)) == -1)
+    memcpy((char *)&tcpPeer.sin_addr, hp->h_addr, hp->h_length);
+    if (connect(tcpSocket, (struct sockaddr *)&tcpPeer, sizeof(tcpPeer)) == -1)
     {
         //writeToScreen("Can't connect to server");
         return;
@@ -137,3 +162,96 @@ void NetworkManager::setupUDPforP2P()
         return;
     }
 }
+
+/*---------------------------------------------------------------------------------
+--	FUNCTION: sendViaTCP
+--
+--	DATE:		Feb 14, 2016
+--
+--	REVISIONS:	Feb 14, 2016
+--
+--	DESIGNER:	Gabriella Cheung
+--
+--	PROGRAMMER:	Gabriella Cheung
+--
+--	INTERFACE:	void sendViaTCP(char * hostname, int port, int packetSize, int repetition, HANDLE file, HANDLE logFile)
+--
+--	PARAMETERS:	char *hostname - hostname of server
+--				int port - port of server
+--				int packetSize - size of packet to send
+--				int repetition - number of packets to send
+--				HANDLE file - handle for file for data to read from
+--				HANDLE logFile - handle for client log file.
+--
+--	RETURNS:	void
+--
+--	NOTES:
+--	This function handles the process of sending packets to the server using TCP.
+--  First it creates a TCP socket, then it tries to establish a connection with
+--  the server. If the connection was established successfully, it goes in a loop
+--  where it gets the data from the getData method and sends the packet using the
+--  WSASend method until all the packets to be sent has been sent. Finally it prints
+--  out the details of the data transfer to the screen before closing the socket.
+--
+---------------------------------------------------------------------------------*/
+void sendViaTCP()
+{
+    char *sbuf;
+    char message[256];
+
+    sbuf = (char*)malloc(DATA_BUFSIZE);
+
+    // transmit data
+    if (send(tcpSocket, sbuf, strlen(sbuf), 0) == -1)
+    {
+        //sprintf(message, "error: %d", WSAGetLastError());
+        //writeToScreen(message);
+    }
+}
+
+/*---------------------------------------------------------------------------------
+--	FUNCTION: sendViaUDP
+--
+--	DATE:		Feb 14, 2016
+--
+--	REVISIONS:	Feb 14, 2016
+--
+--	DESIGNER:	Gabriella Cheung
+--
+--	PROGRAMMER:	Gabriella Cheung
+--
+--	INTERFACE:	void sendViaUDP(char * hostname, int port, int packetSize, int repetition, HANDLE file, HANDLE logFile)
+--
+--	PARAMETERS:	char *hostname - hostname of server
+--				int port - port of server
+--				int packetSize - size of packet to send
+--				int repetition - number of packets to send
+--				HANDLE file - handle for file for data to read from
+--				HANDLE logFile - handle for client log file.
+--
+--	RETURNS:	void
+--
+--	NOTES:
+--	This function handles the process of sending packets to the server using UDP.
+--  First it creates a UDP socket, then in a loop it gets the data from the getData
+--  method and sends the packet using the WSASendTo method until all the packets
+--  has been sent. Finally it prints out the details of the data transfer to the
+--	 screen before closing the socket.
+--
+---------------------------------------------------------------------------------*/
+void sendViaUDP()
+{
+    char *sbuf;
+
+    int server_len = sizeof(udpPeer);
+
+    sbuf = (char*)malloc(DATA_BUFSIZE);
+
+    // transmit data
+    if (sendto(udpSocket, sbuf, strlen(sbuf), 0, (struct sockaddr *)&udpPeer, server_len) == -1)
+    {
+        //sprintf(message, "error: %d", WSAGetLastError());
+        //writeToScreen(message);
+    }
+}
+

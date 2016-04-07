@@ -4,6 +4,7 @@
 #include "circularbuffer.h"
 
 #define UDP_PORT        7000
+#define TCP_PORT        8000
 #define DATA_BUFSIZE    4096
 #define MAXLEN          256
 #define MAX_BLOCKS      100

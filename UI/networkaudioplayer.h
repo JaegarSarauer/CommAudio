@@ -8,7 +8,6 @@
 #include <QIODevice>
 #include "audiomanager.h"
 #include "circularbuffer.h"
-#include "receiver.h"
 
 class NetworkAudioPlayer : public QObject
 {

@@ -10,7 +10,6 @@
 #include "audiomanager.h"
 #include "audiothread.h"
 #include "networkmanager.h"
-#include "receiver.h"
 #include "networkaudioplayer.h"
 
 namespace Ui {
