@@ -18,7 +18,8 @@ public:
     void cleanUp();
     void setupUDPforP2P();
     bool createMulticastServerSocket(int port);
-    void startUDPReceiver(int port);
+    bool createMulticastClientSocket(const char* serverAddr, int port);
+    void startUDPReceiver(CircularBuffer *);
     void startTCPReceiver(int port);
     void sendMulticast(char * buf, int length);
 

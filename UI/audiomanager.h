@@ -22,12 +22,14 @@ public:
 
     QAudioOutput * playAudio();
     bool setupAudioPlayer(QFile * file);
+    bool setupAudioPlayerNoFile();
     void setVolume(double volume);
     void stopAudio();
     void pauseAudio();
     void unpauseAudio();
     bool isPaused();
     bool isPlaying();
+    CircularBuffer * getAudioBuffer();
 
     ~AudioManager();
 

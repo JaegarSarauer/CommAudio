@@ -28,6 +28,23 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
     return true;
 }
 
+bool AudioManager::setupAudioPlayerNoFile() {
+    format.setSampleRate(44100);
+    format.setChannelCount(2);
+    format.setSampleSize(16);
+
+    format.setCodec("audio/pcm");
+    format.setByteOrder(QAudioFormat::LittleEndian);
+    format.setSampleType(QAudioFormat::UnSignedInt);
+
+    audio = new QAudioOutput(format, parent);
+    audio->setVolume(constantVolume);
+    audio->setBufferSize(40960);
+
+    audioBuf = new CircularBuffer(8192, 100);
+    return true;
+}
+
 void AudioManager::loadDataIntoBuffer()
 {
     char tempBuf[4096];
@@ -158,4 +175,9 @@ bool AudioManager::isPlaying() {
 AudioManager::~AudioManager()
 {
 
+}
+
+CircularBuffer * AudioManager::getAudioBuffer()
+{
+    return audioBuf;
 }

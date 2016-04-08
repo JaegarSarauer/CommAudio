@@ -16,12 +16,14 @@ typedef struct _SOCKET_INFORMATION {
 
 SOCKET udpSocket;
 SOCKET tcpSocket;
-struct sockaddr_in udpPeer, tcpPeer, stDstAddr;
+struct sockaddr_in udpPeer, tcpPeer, stDstAddr, stSrcAddr;
 SOCKET tcpAcceptSocket;
 BOOL serverRunning = false;
 int uPort, tPort;
 HANDLE hWriteFile, hServerLogFile;
 WSAEVENT udpEvent, tcpEvent;
+struct ip_mreq stMreq;
+CircularBuffer * incBuffer;
 
 DWORD WINAPI udpThread(LPVOID lpParameter);
 DWORD WINAPI startUDPServer(LPVOID n);
@@ -75,7 +77,6 @@ bool NetworkManager::startNetwork()
 
 bool NetworkManager::createMulticastServerSocket(int port)
 {
-    struct ip_mreq stMreq;
     SOCKADDR_IN stLclAddr;
     BOOL  fFlag = FALSE;
 
@@ -113,6 +114,44 @@ bool NetworkManager::createMulticastServerSocket(int port)
     stDstAddr.sin_addr.s_addr = inet_addr("234.5.6.7");
     stDstAddr.sin_port = htons(port);
 
+    return true;
+}
+
+bool NetworkManager::createMulticastClientSocket(const char * serverAddr, int port)
+{
+    struct ip_mreq stMreq;
+    SOCKADDR_IN stLclAddr;
+    BOOL  fFlag = TRUE;
+
+    if ((udpSocket = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
+    {
+        //display error
+        return false;
+    }
+
+    if (setsockopt(udpSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&fFlag, sizeof(fFlag)) == SOCKET_ERROR)
+    {
+        //display error
+        return false;
+    }
+
+    stLclAddr.sin_family = AF_INET;
+    stLclAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    stLclAddr.sin_port = htons(port);
+    if (bind(udpSocket, (struct sockaddr*) &stLclAddr, sizeof(stLclAddr)) == SOCKET_ERROR)
+    {
+        //display error
+        return false;
+    }
+
+    //stMreq.imr_multiaddr.s_addr = inet_addr(serverAddr);
+    stMreq.imr_multiaddr.s_addr = inet_addr("234.5.6.7");
+    stMreq.imr_interface.s_addr = INADDR_ANY;
+    if (setsockopt(udpSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&stMreq, sizeof(stMreq)) == SOCKET_ERROR)
+    {
+        //display error
+        return false;
+    }
     return true;
 }
 
@@ -264,12 +303,11 @@ void sendViaUDP()
     }
 }
 
-void NetworkManager::startUDPReceiver(int port)
+void NetworkManager::startUDPReceiver(CircularBuffer * buffer)
 {
+    incBuffer = buffer;
     HANDLE udpHandle;
     DWORD udpThreadId;
-
-    uPort = port;
 
     if ((udpHandle = CreateThread(NULL, 0, startUDPServer, (LPVOID)0, 0, &udpThreadId)) == NULL)
     {
@@ -316,25 +354,6 @@ DWORD WINAPI startUDPServer(LPVOID n)
     struct timeval tv;
 
     serverRunning = true;
-
-    // Create a datagram socket
-    /*if ((udpSocket = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
-    {
-        ////writeToScreen("Can't create a socket");
-        return -1;
-    }*/
-
-    // Bind an address to the socket
-    /*memset((char *)&udpServer, 0, sizeof(udpServer));
-    udpServer.sin_family = AF_INET;
-    udpServer.sin_port = htons(uPort);
-    udpServer.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    if (bind(udpSocket, (struct sockaddr *)&udpServer, sizeof(udpServer)) == SOCKET_ERROR)
-    {
-        ////writeToScreen("Can't bind name to socket");
-        return -1;
-    }*/
 
     if ((udpEvent = WSACreateEvent()) == WSA_INVALID_EVENT)
     {
@@ -526,7 +545,10 @@ void CALLBACK udpRoutine(DWORD errorCode, DWORD bytesTransferred, LPOVERLAPPED o
 
     if (bytesTransferred > 0)
     {
-        //audioBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len);
+        if (!(incBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len)))
+        {
+            //error
+        }
     }
 }
 
