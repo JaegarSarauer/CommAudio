@@ -48,11 +48,6 @@ void MultiServer::playNextSong() {
         return;
     }
 
-    if (ui->listQueueFiles->count() <= 0) {
-        AddStatusMessage("No songs in queue.");
-        return;
-    }
-
     for (int i = 0; i < ui->listQueueFiles->count(); i++) {
         ui->listQueueFiles->item(i)->setBackgroundColor(Qt::white);
     }
@@ -66,8 +61,8 @@ void MultiServer::playNextSong() {
 
     QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
     current->setBackgroundColor(Qt::green);
-    audioManager->setupAudioPlayer(new QFile(current->text()));
-    /*QIODevice * device = audioManager->playAudio();
+    /*audioManager->setupAudioPlayer(new QFile(current->text()));
+    QIODevice * device = audioManager->playAudio();
 
     QThread *audioThread = new QThread( );
     deviceListener = new AudioThread(device);
@@ -80,6 +75,21 @@ void MultiServer::playNextSong() {
     connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
     connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
     audioThread->start();*/
+
+    netAudioPlayer->setup(new QFile(current->text()));
+    QAudioOutput * audioOut = netAudioPlayer->playAudio(netManager);
+
+    QThread * queueThread = new QThread();
+    deviceListener = new AudioThread(audioOut);
+    deviceListener->moveToThread(queueThread);
+    connect( queueThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), queueThread, SLOT(quit()) );
+    //automatically delete thread and deviceListener object when work is done:
+    connect( queueThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
+    connect( queueThread, SIGNAL(finished()), queueThread, SLOT(deleteLater()) );
+    queueThread->start();
 }
 
 /*
@@ -128,13 +138,21 @@ void MultiServer::successfulConnection(bool connected) {
 
 void MultiServer::on_BroadcastButton_released()
 {
+    if (ui->listQueueFiles->count() <= 0) {
+        AddStatusMessage("No songs in queue.");
+        return;
+    }
+
     if (!netManager->startNetwork())
     {
         return;
     }
-    if (!netManager->createMulticastServerSocket())
+    int port = ui->linePort->text().toInt();
+    if (!netManager->createMulticastServerSocket(port))
     {
         return;
     }
+
+    playNextSong();
 
 }

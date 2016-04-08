@@ -1,8 +1,8 @@
 #include "audiomanager.h"
 #include <iostream>
 
-    QIODevice *device;
-    QThread *playThread;
+QIODevice *device;
+QThread *playThread;
 
 bool AudioManager::setupAudioPlayer(QFile * f) {
     file = f;
@@ -24,7 +24,7 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
     audio->setVolume(constantVolume);
     audio->setBufferSize(40960);
 
-    audioBuf = new CircularBuffer(4096, 100);
+    audioBuf = new CircularBuffer(8192, 100);
     return true;
 }
 

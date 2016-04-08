@@ -4,29 +4,38 @@
 #include <QObject>
 #include <QAudioFormat>
 #include <QAudioOutput>
-#include <QBuffer>
 #include <QIODevice>
 #include "audiomanager.h"
 #include "circularbuffer.h"
+#include "networkmanager.h"
 
 class NetworkAudioPlayer : public QObject
 {
+    Q_OBJECT
 public:
     NetworkAudioPlayer();
-    void setParameters();
+    bool setup(QFile *);
+    QAudioOutput * playAudio(NetworkManager * manager);
+
+    void unpauseAudio();
 private:
     QAudioFormat format;
     QAudioOutput *audio;
     QIODevice * audioDevice;
     QAudioDeviceInfo deviceinfo;
-    bool second;
     CircularBuffer * audioBuffer;
+    NetworkManager * netManager;
+    QFile * file;
+    FILE * fp;
+    AudioPlayThread * bufferListener;
+    bool PAUSED = false;
+    bool PLAYING = false;
 signals:
-public slots:
-    void playAudio();
-    void appendAudioData();
-    void stopAudio();
-
+    void finishedReading();
+    void finishedWriting();
+private slots:
+    void loadDataIntoBuffer();
+    void writeDataToDevice();
 };
 
 #endif // NETWORKAUDIOPLAYER_H

@@ -16,7 +16,7 @@ typedef struct _SOCKET_INFORMATION {
 
 SOCKET udpSocket;
 SOCKET tcpSocket;
-struct sockaddr_in udpPeer, tcpPeer;
+struct sockaddr_in udpPeer, tcpPeer, stDstAddr;
 SOCKET tcpAcceptSocket;
 BOOL serverRunning = false;
 int uPort, tPort;
@@ -73,10 +73,10 @@ bool NetworkManager::startNetwork()
     return true;
 }
 
-bool NetworkManager::createMulticastServerSocket()
+bool NetworkManager::createMulticastServerSocket(int port)
 {
     struct ip_mreq stMreq;
-    SOCKADDR_IN stLclAddr, stDstAddr;
+    SOCKADDR_IN stLclAddr;
     BOOL  fFlag = FALSE;
 
     if ((udpSocket = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
@@ -111,7 +111,7 @@ bool NetworkManager::createMulticastServerSocket()
     /* Assign our destination address */
     stDstAddr.sin_family = AF_INET;
     stDstAddr.sin_addr.s_addr = inet_addr("234.5.6.7");
-    stDstAddr.sin_port = htons(7000);
+    stDstAddr.sin_port = htons(port);
 
     return true;
 }
@@ -160,6 +160,15 @@ void NetworkManager::setupUDPforP2P()
     {
         //writeToScreen("Can't bind name to socket");
         return;
+    }
+}
+
+void NetworkManager::sendMulticast(char * buf, int length)
+{
+    if (sendto(udpSocket, buf, length, 0, (struct sockaddr*)&stDstAddr, sizeof(stDstAddr)) == -1)
+    {
+        //sprintf(message, "error: %d", WSAGetLastError());
+        //writeToScreen(message);
     }
 }
 

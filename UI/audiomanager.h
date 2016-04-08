@@ -42,6 +42,7 @@ private:
     CircularBuffer * audioBuf;
     AudioPlayThread * bufferListener;
 
+
 signals:
     void finishedLoading();
     void finishedReading();
