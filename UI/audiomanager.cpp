@@ -24,7 +24,7 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
     audio->setVolume(constantVolume);
     audio->setBufferSize(40960);
 
-    audioBuf = new CircularBuffer(8192, 100);
+    audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
     return true;
 }
 
@@ -41,13 +41,13 @@ bool AudioManager::setupAudioPlayerNoFile() {
     audio->setVolume(constantVolume);
     audio->setBufferSize(40960);
 
-    audioBuf = new CircularBuffer(8192, 100);
+    audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
     return true;
 }
 
 void AudioManager::loadDataIntoBuffer()
 {
-    char tempBuf[4096];
+    char tempBuf[DATA_BUFSIZE];
     if(!audioBuf->isFull())
     {
         int bytesRead = file->read((char*)&tempBuf, sizeof(tempBuf));
@@ -56,7 +56,7 @@ void AudioManager::loadDataIntoBuffer()
             emit finishedReading();
             //file->close();
         }
-        audioBuf->cbWrite(tempBuf, 4096);
+        audioBuf->cbWrite(tempBuf, DATA_BUFSIZE);
         //emit finishedLoading();
     }
 }
@@ -73,21 +73,24 @@ void AudioManager::writeDataToDevice() {
 
     }
     int freeSpace = audio->bytesFree();
-    if (freeSpace < 4096)
+    if (freeSpace < DATA_BUFSIZE)
     {
         emit finishedWriting();
         return;
     } else {
         char * data = audioBuf->cbRead(1);
-        device->write(data, 4096);
+        device->write(data, DATA_BUFSIZE);
         emit finishedWriting();
     }
-    if (!file->atEnd())
+    if (file != NULL)
     {
-       loadDataIntoBuffer();
-    } else {
-        file->close();
-        //signal to peer2peer to load next file?????
+        if(!file->atEnd())
+        {
+           loadDataIntoBuffer();
+        } else {
+            file->close();
+            //signal to peer2peer to load next file?????
+        }
     }
 }
 

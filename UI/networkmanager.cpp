@@ -7,8 +7,6 @@ typedef struct _SOCKET_INFORMATION {
     OVERLAPPED Overlapped;
     SOCKET Socket;
     CHAR Buffer[DATA_BUFSIZE];
-    int head = 0;
-    int tail = 0;
     WSABUF DataBuf;
     DWORD Timeout;
 
@@ -23,7 +21,8 @@ int uPort, tPort;
 HANDLE hWriteFile, hServerLogFile;
 WSAEVENT udpEvent, tcpEvent;
 struct ip_mreq stMreq;
-CircularBuffer * incBuffer;
+
+CircularBuffer * NetworkManager::incBuffer;
 
 DWORD WINAPI udpThread(LPVOID lpParameter);
 DWORD WINAPI startUDPServer(LPVOID n);
@@ -305,7 +304,7 @@ void sendViaUDP()
 
 void NetworkManager::startUDPReceiver(CircularBuffer * buffer)
 {
-    incBuffer = buffer;
+    NetworkManager::incBuffer = buffer;
     HANDLE udpHandle;
     DWORD udpThreadId;
 
@@ -484,10 +483,6 @@ DWORD WINAPI udpThread(LPVOID lpParameter)
         ZeroMemory(&(socketInfo->Overlapped), sizeof(WSAOVERLAPPED));
         socketInfo->DataBuf.len = DATA_BUFSIZE;
         socketInfo->DataBuf.buf = socketInfo->Buffer;
-        /*socketInfo->DataBuf.buf = socketInfo->Buffer+Head*DATA_BUFSIZE;
-        if(++socketInfo->Head == NUM_OF_BUFFERS){
-            socketInfo->Head = 0;
-        }*/
         socketInfo->Timeout = INFINITE;
 
         flags = 0;
@@ -545,9 +540,10 @@ void CALLBACK udpRoutine(DWORD errorCode, DWORD bytesTransferred, LPOVERLAPPED o
 
     if (bytesTransferred > 0)
     {
-        if (!(incBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len)))
+        if (!(NetworkManager::incBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len)))
         {
             //error
+            int test = 0;
         }
     }
 }

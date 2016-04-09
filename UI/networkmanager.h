@@ -23,6 +23,7 @@ public:
     void startTCPReceiver(int port);
     void sendMulticast(char * buf, int length);
 
+    static CircularBuffer * incBuffer;
     bool tcpConnected;
 private:
 };

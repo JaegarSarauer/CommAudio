@@ -43,7 +43,10 @@ void MultiClient::on_buttonConnect_released()
 
     bufferListener = new AudioPlayThread(incomingBuffer);
     bufferListener->moveToThread(playThread);
+
+    connect (playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()));
     connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
+    connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
     playThread->start();
 
 
