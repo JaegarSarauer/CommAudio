@@ -33,3 +33,8 @@ void StartWindow::on_pushButton_clicked()
    }
    destroy(true, false);
 }
+
+void StartWindow::on_pushButton_released()
+{
+
+}
