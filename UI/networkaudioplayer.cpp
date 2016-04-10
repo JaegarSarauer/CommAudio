@@ -121,7 +121,7 @@ void NetworkAudioPlayer::writeDataToDevice()
         aDevice = audio->start();
     }
     int freeSpace = audio->bytesFree();
-    if (freeSpace < DATA_BUFSIZE)
+    if (freeSpace < DATA_BUFSIZE*2)
     {
         emit finishedWriting();
         return;

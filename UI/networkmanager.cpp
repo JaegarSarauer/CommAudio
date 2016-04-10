@@ -194,7 +194,7 @@ bool NetworkManager::setupUDPforP2P()
     udpPeer.sin_addr.s_addr = htonl(INADDR_ANY);
     //udpPeer.sin_addr.s_addr = peer.sin_addr.s_addr; //does this work??
 
-    if ((udpSendSocket = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
+    /*if ((udpSendSocket = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
     {
         //display error
         return false;
@@ -213,6 +213,18 @@ bool NetworkManager::setupUDPforP2P()
     }
 
     if (bind(udpRecvSocket, (struct sockaddr *)&udpPeer, sizeof(udpPeer)) == SOCKET_ERROR)
+    {
+        //writeToScreen("Can't bind name to socket");
+        return false;
+    }*/
+
+    if ((udpSocket = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
+    {
+        //display error
+        return false;
+    }
+
+    if (bind(udpSocket, (struct sockaddr *)&udpPeer, sizeof(udpPeer)) == SOCKET_ERROR)
     {
         //writeToScreen("Can't bind name to socket");
         return false;

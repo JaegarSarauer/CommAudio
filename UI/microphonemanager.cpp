@@ -4,8 +4,8 @@
 
 void MicrophoneManager::RecordAudio()
 {
-    destinationFile.setFileName("testrec.raw");
-    destinationFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
+    //destinationFile.setFileName("testrec.raw");
+    //destinationFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
 
     QAudioFormat format;
     // Set up the desired format, for example:
@@ -24,7 +24,21 @@ void MicrophoneManager::RecordAudio()
 
     audio = new QAudioInput(format, parent);
     //connect(audio, SIGNAL(stateChanged(QAudio::State)), parent, SLOT(handleStateChanged(QAudio::State)));
-    audio->start(&destinationFile);
+    //audio->start(&destinationFile);
+    audioDevice = audio->start();
+
+    connect (audioDevice, SIGNAL(readyRead()), this, SLOT(readDevice())); //data in device
+}
+
+void MicrophoneManager::readDevice()
+{
+    while(true)
+    {
+        if (audioDevice->bytesAvailable() > 8192)
+        {
+            //read data into circular buffer
+        }
+    }
 }
 
 int MicrophoneManager::RawToWavConvert(const char *rawfn, const char *wavfn, long frequency) {
