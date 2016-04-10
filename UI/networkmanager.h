@@ -2,6 +2,7 @@
 #define NETWORKMANAGER_H
 
 #include "circularbuffer.h"
+#include "winsock.h"
 
 #define UDP_PORT        7000
 #define TCP_PORT        8000
@@ -16,7 +17,7 @@ public:
     bool startNetwork();
     void connectViaTCP(char * hostname, int port);
     void cleanUp();
-    void setupUDPforP2P();
+    bool setupUDPforP2P();
     bool createMulticastServerSocket(int port);
     bool createMulticastClientSocket(const char* serverAddr, int port);
     void startUDPReceiver(CircularBuffer *);
@@ -24,6 +25,7 @@ public:
     void sendMulticast(char * buf, int length);
 
     static CircularBuffer * incBuffer;
+    static SOCKET acceptSocket;
     bool tcpConnected;
 private:
 };

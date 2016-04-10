@@ -15,8 +15,45 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
     audioManager = new AudioManager(this);
     QDir dir = (QDir::currentPath() + "/MusicFiles/");
     ui->listMusicFiles->addItems(dir.entryList(QStringList("*.wav")));
-
     currentQueueIndex = -1;
+    networkManager.startNetwork();
+    networkManager.startTCPReceiver(8000);
+
+    socketThread = new QThread();
+    socketListener = new IncomingConnThread((void*) NetworkManager::acceptSocket);
+    socketListener->moveToThread(socketThread);
+
+    connect(socketThread, SIGNAL(started()), socketListener, SLOT(checkForConnection()));
+    connect(socketListener, SIGNAL(tcpConnected()), this, SLOT(startP2P()));
+    connect(socketListener, SIGNAL(tcpConnected()), socketThread, SLOT(quit()));
+    //connect (this, SIGNAL(connectionMade()), socketThread, SLOT(quit()));
+
+    connect( socketThread, SIGNAL(finished()), socketListener, SLOT(deleteLater()) );
+    connect( socketThread, SIGNAL(finished()), socketThread, SLOT(deleteLater()) );
+    socketThread->start();
+}
+
+void PeerToPeer::startP2P()
+{
+    CircularBuffer * incomingBuffer;
+
+    //start UDP receiver and sender
+    // 1 UDP socket for each
+    if (!networkManager.setupUDPforP2P())
+    {
+        return;
+    }
+    networkManager.startUDPReceiver(incomingBuffer);
+
+    //start thread checking circular buffer
+    QThread * playThread = new QThread();
+    bufferListener = new AudioPlayThread(incomingBuffer);
+    bufferListener->moveToThread(playThread);
+
+    connect (playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()));
+    connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
+    connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
+    playThread->start();
 }
 
 /*
@@ -54,8 +91,8 @@ void PeerToPeer::on_buttonConnect_released()
         int port = atoi(ui->linePort->text().toUtf8().constData());
 
         // ---- TODO ---- handle connecting to the peer here, use the above 2 strings as parameters for connection
-
         AddStatusMessage("Attempting to Connect...");
+
 }
 
 /*

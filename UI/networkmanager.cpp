@@ -12,10 +12,9 @@ typedef struct _SOCKET_INFORMATION {
 
 } SOCKET_INFORMATION, *LPSOCKET_INFORMATION;
 
-SOCKET udpSocket;
+SOCKET udpSocket, udpSendSocket, udpRecvSocket;
 SOCKET tcpSocket;
 struct sockaddr_in udpPeer, tcpPeer, stDstAddr, stSrcAddr;
-SOCKET tcpAcceptSocket;
 BOOL serverRunning = false;
 int uPort, tPort;
 HANDLE hWriteFile, hServerLogFile;
@@ -23,6 +22,7 @@ WSAEVENT udpEvent, tcpEvent;
 struct ip_mreq stMreq;
 
 CircularBuffer * NetworkManager::incBuffer;
+SOCKET NetworkManager::acceptSocket;
 
 DWORD WINAPI udpThread(LPVOID lpParameter);
 DWORD WINAPI startUDPServer(LPVOID n);
@@ -93,7 +93,7 @@ bool NetworkManager::createMulticastServerSocket(int port)
         return false;
     }
 
-    stMreq.imr_multiaddr.s_addr = inet_addr("234.5.6.7");
+    stMreq.imr_multiaddr.s_addr = inet_addr("234.7.8.9");
     stMreq.imr_interface.s_addr = INADDR_ANY;
     if (setsockopt(udpSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&stMreq, sizeof(stMreq)) == SOCKET_ERROR)
     {
@@ -110,7 +110,7 @@ bool NetworkManager::createMulticastServerSocket(int port)
 
     /* Assign our destination address */
     stDstAddr.sin_family = AF_INET;
-    stDstAddr.sin_addr.s_addr = inet_addr("234.5.6.7");
+    stDstAddr.sin_addr.s_addr = inet_addr("234.7.8.9");
     stDstAddr.sin_port = htons(port);
 
     return true;
@@ -144,7 +144,7 @@ bool NetworkManager::createMulticastClientSocket(const char * serverAddr, int po
     }
 
     //stMreq.imr_multiaddr.s_addr = inet_addr(serverAddr);
-    stMreq.imr_multiaddr.s_addr = inet_addr("234.5.6.7");
+    stMreq.imr_multiaddr.s_addr = inet_addr("234.7.8.9");
     stMreq.imr_interface.s_addr = INADDR_ANY;
     if (setsockopt(udpSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&stMreq, sizeof(stMreq)) == SOCKET_ERROR)
     {
@@ -186,7 +186,7 @@ void NetworkManager::cleanUp()
     WSACleanup();
 }
 
-void NetworkManager::setupUDPforP2P()
+bool NetworkManager::setupUDPforP2P()
 {
     memset((char *)&udpPeer, 0, sizeof(udpPeer));
     udpPeer.sin_family = AF_INET;
@@ -194,11 +194,30 @@ void NetworkManager::setupUDPforP2P()
     udpPeer.sin_addr.s_addr = htonl(INADDR_ANY);
     //udpPeer.sin_addr.s_addr = peer.sin_addr.s_addr; //does this work??
 
-    if (bind(udpSocket, (struct sockaddr *)&udpPeer, sizeof(udpPeer)) == SOCKET_ERROR)
+    if ((udpSendSocket = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
+    {
+        //display error
+        return false;
+    }
+
+    if (bind(udpSendSocket, (struct sockaddr *)&udpPeer, sizeof(udpPeer)) == SOCKET_ERROR)
     {
         //writeToScreen("Can't bind name to socket");
-        return;
+        return false;
     }
+
+    if ((udpRecvSocket = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
+    {
+        //display error
+        return false;
+    }
+
+    if (bind(udpRecvSocket, (struct sockaddr *)&udpPeer, sizeof(udpPeer)) == SOCKET_ERROR)
+    {
+        //writeToScreen("Can't bind name to socket");
+        return false;
+    }
+    return true;
 }
 
 void NetworkManager::sendMulticast(char * buf, int length)
@@ -553,9 +572,10 @@ void NetworkManager::startTCPReceiver(int port)
     HANDLE tcpHandle;
     DWORD tcpThreadId;
 
+    NetworkManager::acceptSocket = NULL;
     tPort = port;
 
-    if ((tcpHandle = CreateThread(NULL, 0, startTCPServer, (LPVOID)0, 0, &tcpThreadId)) == NULL)
+    if ((tcpHandle = CreateThread(NULL, 0, startTCPServer, 0, 0, &tcpThreadId)) == NULL)
     {
         //display error
         return;
@@ -641,7 +661,7 @@ DWORD WINAPI startTCPServer(LPVOID n)
 
     while (serverRunning)
     {
-        tcpAcceptSocket = accept(tcpSocket, NULL, NULL);
+        NetworkManager::acceptSocket = accept(tcpSocket, NULL, NULL);
 
         if (WSASetEvent(tcpEvent) == FALSE)
         {
@@ -718,7 +738,7 @@ DWORD WINAPI tcpThread(LPVOID lpParameter)
         }
 
         // Fill in the details of our accepted socket.
-        socketInfo->Socket = tcpAcceptSocket;
+        socketInfo->Socket = NetworkManager::acceptSocket;
         ZeroMemory(&(socketInfo->Overlapped), sizeof(WSAOVERLAPPED));
         socketInfo->DataBuf.len = DATA_BUFSIZE;
         socketInfo->DataBuf.buf = socketInfo->Buffer;

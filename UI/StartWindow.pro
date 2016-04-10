@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     peertopeer.cpp \
     multiclient.cpp \
     audioplaythread.cpp \
-    microphonemanager.cpp
+    microphonemanager.cpp \
+    incomingconnthread.cpp
 
 HEADERS  += startwindow.h \
     multiserver.h \
@@ -35,7 +36,8 @@ HEADERS  += startwindow.h \
     peertopeer.h \
     multiclient.h \
     audioplaythread.h \
-    microphonemanager.h
+    microphonemanager.h \
+    incomingconnthread.h
 
 FORMS    += startwindow.ui \
     multiserver.ui \

@@ -2,30 +2,29 @@
 #include <stdio.h>
 
 
-void MicrophoneManager::RecordAudio() {
-    {
-        destinationFile.setFileName("testrec.raw");
-        destinationFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
+void MicrophoneManager::RecordAudio()
+{
+    destinationFile.setFileName("testrec.raw");
+    destinationFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
 
-        QAudioFormat format;
-        // Set up the desired format, for example:
-        format.setSampleRate(8000);
-        format.setChannelCount(1);
-        format.setSampleSize(8);
-        format.setCodec("audio/pcm");
-        format.setByteOrder(QAudioFormat::LittleEndian);
-        format.setSampleType(QAudioFormat::UnSignedInt);
+    QAudioFormat format;
+    // Set up the desired format, for example:
+    format.setSampleRate(8000);
+    format.setChannelCount(1);
+    format.setSampleSize(8);
+    format.setCodec("audio/pcm");
+    format.setByteOrder(QAudioFormat::LittleEndian);
+    format.setSampleType(QAudioFormat::UnSignedInt);
 
-        QAudioDeviceInfo info = QAudioDeviceInfo::defaultInputDevice();
-        if (!info.isFormatSupported(format)) {
-            qWarning() << "Default format not supported, trying to use the nearest.";
-            format = info.nearestFormat(format);
-        }
-
-        audio = new QAudioInput(format, parent);
-        //connect(audio, SIGNAL(stateChanged(QAudio::State)), parent, SLOT(handleStateChanged(QAudio::State)));
-        audio->start(&destinationFile);
+    QAudioDeviceInfo info = QAudioDeviceInfo::defaultInputDevice();
+    if (!info.isFormatSupported(format)) {
+        qWarning() << "Default format not supported, trying to use the nearest.";
+        format = info.nearestFormat(format);
     }
+
+    audio = new QAudioInput(format, parent);
+    //connect(audio, SIGNAL(stateChanged(QAudio::State)), parent, SLOT(handleStateChanged(QAudio::State)));
+    audio->start(&destinationFile);
 }
 
 int MicrophoneManager::RawToWavConvert(const char *rawfn, const char *wavfn, long frequency) {
