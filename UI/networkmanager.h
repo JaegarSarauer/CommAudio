@@ -2,7 +2,7 @@
 #define NETWORKMANAGER_H
 
 #include "circularbuffer.h"
-#include "winsock.h"
+#include "udpsendthread.h"
 
 #define UDP_PORT        7000
 #define TCP_PORT        8000
@@ -10,8 +10,9 @@
 #define MAXLEN          256
 #define MAX_BLOCKS      100
 
-class NetworkManager
+class NetworkManager : public QObject
 {
+    Q_OBJECT
 public:
     //NetworkManager();
     bool startNetwork();
@@ -29,6 +30,11 @@ public:
     static SOCKET acceptSocket;
     bool tcpConnected;
 private:
+    UDPSendThread * udpSender;
+
+signals:
+    void sendData(char *, int);
+    void stopSender();
 };
 
 #endif // NETWORKMANAGER_H

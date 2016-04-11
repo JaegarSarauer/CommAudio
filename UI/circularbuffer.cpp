@@ -28,8 +28,8 @@ char * CircularBuffer::cbRead(int blocksToRead)
 
 bool CircularBuffer::cbWrite(const char * data, size_t length)
 {
-    size_t datalen = strlen(data);
-    /*if (datalen > blockSize )
+    /*size_t datalen = strlen(data);
+    if (datalen > blockSize )
     {
         //error
         return false;

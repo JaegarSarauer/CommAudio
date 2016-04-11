@@ -1,7 +1,7 @@
-#include <winsock2.h>
+#include <WinSock2.h>
 #include <WS2tcpip.h>
-#include <windows.h>
 #include <errno.h>
+#include <QThread>
 #include "networkmanager.h"
 
 typedef struct _SOCKET_INFORMATION {
@@ -114,6 +114,16 @@ bool NetworkManager::createMulticastServerSocket(int port)
     stDstAddr.sin_addr.s_addr = inet_addr("234.7.8.9");
     stDstAddr.sin_port = htons(port);
 
+    if (udpSender == NULL)
+    {
+        QThread * sendThread = new QThread();
+        udpSender = new UDPSendThread(udpSocket, stDstAddr);
+        udpSender->moveToThread(sendThread);
+
+        connect(this, SIGNAL(sendData(char*,int)), udpSender, SLOT(send(char*,int)));
+        connect(this, SIGNAL(stopSender()), sendThread, SLOT(quit()));
+        sendThread->start();
+    }
     return true;
 }
 
@@ -171,11 +181,11 @@ void NetworkManager::connectViaTCP(const char * hostname, int port)
     }
 
     memcpy((char *)&tcpPeer.sin_addr, hp->h_addr, hp->h_length);
-    if (connect(tcpSocket, (struct sockaddr *)&tcpPeer, sizeof(tcpPeer)) == -1)
+    /*if (connect(tcpSocket, (struct sockaddr *)&tcpPeer, sizeof(tcpPeer)) == -1)
     {
         //writeToScreen("Can't connect to server");
         return;
-    }
+    }*/
 
     tcpConnected = true;
 }
@@ -246,25 +256,39 @@ bool NetworkManager::setupUDPforP2P(const char * hostname, int port)
 
     const char * msg = "connect";
     //sendViaUDP(msg);
+    //NetworkManager::incBuffer = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
+
+    if (udpSender == NULL)
+    {
+        QThread * sendThread = new QThread();
+        udpSender = new UDPSendThread(udpSocket, udpPeer);
+        udpSender->moveToThread(sendThread);
+
+        connect(this, SIGNAL(sendData(char*,int)), udpSender, SLOT(send(char*,int)));
+        connect(this, SIGNAL(stopSender()), sendThread, SLOT(quit()));
+        sendThread->start();
+    }
     return true;
 }
 
 void NetworkManager::sendMulticast(char * buf, int length)
 {
-    if (sendto(udpSocket, buf, length, 0, (struct sockaddr*)&stDstAddr, sizeof(stDstAddr)) == -1)
+    /*if (sendto(udpSocket, buf, length, 0, (struct sockaddr*)&stDstAddr, sizeof(stDstAddr)) == -1)
     {
         //sprintf(message, "error: %d", WSAGetLastError());
         //writeToScreen(message);
-    }
+    }*/
+    emit sendData(buf, length);
 }
 
 void NetworkManager::sendP2P(char * buf, int length)
 {
-    if (sendto(udpSocket, buf, length, 0, (struct sockaddr*)&udpPeer, sizeof(udpPeer)) == -1)
+    /*if (sendto(udpSocket, buf, length, 0, (struct sockaddr*)&udpPeer, sizeof(udpPeer)) == -1)
     {
         //sprintf(message, "error: %d", WSAGetLastError());
         //writeToScreen(message);
-    }
+    }*/
+    emit sendData(buf, length);
 }
 
 /*---------------------------------------------------------------------------------

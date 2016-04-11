@@ -19,6 +19,7 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
     networkManager = new NetworkManager();
     networkManager->startNetwork();
     netAudioPlayer = new NetworkAudioPlayer();
+    //startP2P();
     //networkManager.startTCPReceiver(8321);
 
     /*socketThread = new QThread();
@@ -293,3 +294,51 @@ void PeerToPeer::on_OpenPathButton_released()
                                                     QDir::currentPath() + "/MusicFiles",
                                                     tr("Wav Files (*.wav)")));
 }
+
+/*
+ * This function will play the next song in the list. It is auto triggered if it finds the
+ * currently playing song has finished.
+ */
+/*void PeerToPeer::playNextSong() {
+    if (stopThreadLoop) {
+        disconnect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
+        disconnect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+        stopThreadLoop = false;
+        return;
+    }
+
+    if (ui->listQueueFiles->count() <= 0) {
+        AddStatusMessage("No songs in queue.");
+        return;
+    }
+
+    for (int i = 0; i < ui->listQueueFiles->count(); i++) {
+        ui->listQueueFiles->item(i)->setBackgroundColor(Qt::white);
+    }
+
+    currentQueueIndex++;
+
+    //go back to beginning of the list
+    if (currentQueueIndex > ui->listQueueFiles->count() - 1) {
+        currentQueueIndex = 0;
+    }
+
+    QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
+    current->setBackgroundColor(Qt::green);
+    audioManager->setupAudioPlayer(new QFile(current->text()));
+    QAudioOutput * audio = audioManager->playAudio();
+
+    audioThread = new QThread();
+    deviceListener = new AudioThread(audio);
+    deviceListener->moveToThread(audioThread);
+
+    connect( audioThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
+    //connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), audioThread, SLOT(quit()));
+    //connect( audio, SIGNAL(stateChanged(QAudio::State)), deviceListener, SLOT(checkForEnding(QAudio::State)));
+    //automatically delete thread and deviceListener object when work is done:
+    connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
+    connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
+    audioThread->start();
+}*/
