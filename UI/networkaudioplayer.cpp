@@ -27,7 +27,7 @@ bool NetworkAudioPlayer::setup(QFile * f) {
 
     format.setCodec("audio/pcm");
     format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setSampleType(QAudioFormat::SignedInt);
+    format.setSampleType(QAudioFormat::UnSignedInt);
     audio = new QAudioOutput(format, this);
     //audio->setVolume(0.0);
     //audio->setNotifyInterval(500);
@@ -54,7 +54,7 @@ void NetworkAudioPlayer::loadDataIntoBuffer()
     }
 }
 
-QAudioOutput *  NetworkAudioPlayer::playAudio(NetworkManager * manager)
+QAudioOutput * NetworkAudioPlayer::playAudio(NetworkManager * manager)
 {
     netManager = manager;
     if (!PAUSED) {
@@ -142,4 +142,22 @@ void NetworkAudioPlayer::writeDataToDevice()
 
 void NetworkAudioPlayer::unpauseAudio() {
     audio->resume();
+}
+
+void NetworkAudioPlayer::sendAudio(NetworkManager * manager)
+{
+    netManager = manager;
+    int bytesRead = 0;
+    char tempBuf[DATA_BUFSIZE];
+
+     // PUT IN SEPARATE THREAD
+    do {
+        bytesRead = file->read((char*)&tempBuf, sizeof(tempBuf));
+        if (bytesRead <= 0)
+        {
+            file->close();
+        }
+        netManager->sendP2P(tempBuf, DATA_BUFSIZE);
+        Sleep(120);
+    } while (!file->atEnd());
 }
