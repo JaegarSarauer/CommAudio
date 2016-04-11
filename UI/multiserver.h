@@ -11,6 +11,7 @@
 #include "audiothread.h"
 #include "networkmanager.h"
 #include "networkaudioplayer.h"
+#include "microphonemanager.h"
 
 namespace Ui {
 class MultiServer;
@@ -23,6 +24,9 @@ class MultiServer : public QMainWindow
 public:
     explicit MultiServer(QWidget *parent = 0);
     ~MultiServer();
+
+signals:
+    void stopMicrophoneRecording();
 
 private slots:
     void on_QueueAddButton_released();
@@ -41,7 +45,10 @@ private slots:
 
     void on_BroadcastButton_released();
 
+    void on_SendMicrophone_released();
+
 private:
+    MicrophoneManager *mic;
     bool isDataSending = true;
     Ui::MultiServer *ui;
     AudioManager *audioManager;
@@ -50,6 +57,7 @@ private:
     bool stopThreadLoop = false;
     NetworkAudioPlayer * netAudioPlayer;
     NetworkManager * netManager;
+    bool isMicrophoneSending = false;
 };
 
 #endif // MULTISERVER_H

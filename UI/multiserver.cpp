@@ -11,6 +11,10 @@ MultiServer::MultiServer(QWidget *parent) :
     ui->setupUi(this);
     audioManager = new AudioManager(this);
     QDir dir;
+    if (!QDir(QDir::currentPath() + "/MusicFiles").exists())
+        QDir().mkdir(QDir::currentPath() + "/MusicFiles");
+    audioManager = new AudioManager(this);
+    dir = (QDir::currentPath() + "/MusicFiles/");
     ui->listMusicFiles->addItems(dir.entryList(QStringList("*.wav")));
     currentQueueIndex = -1;
     netAudioPlayer = new NetworkAudioPlayer();
@@ -155,4 +159,24 @@ void MultiServer::on_BroadcastButton_released()
 
     playNextSong();
 
+}
+
+void MultiServer::on_SendMicrophone_released()
+{
+    if (isMicrophoneSending) {
+        //were no longer sending microphone data
+        emit stopMicrophoneRecording();
+        //if (!isDataSending)
+            //emit on_DataSendingButton_released();
+        ui->SendMicrophone->setText("Start Recording Microphone");
+    } else {
+        //were are now sending microphone data
+        mic = new MicrophoneManager(this);
+        mic->RecordAudio();
+        connect(this, SIGNAL(stopMicrophoneRecording()), mic, SLOT(stopRecording()));
+        //if (isDataSending)
+          //  emit on_DataSendingButton_released();
+        ui->SendMicrophone->setText("Stop Recording Microphone");
+    }
+    isMicrophoneSending = !isMicrophoneSending;
 }

@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QTimer>
 #include <QDebug>
+#include <QDir>
 
 class MicrophoneManager : public QObject
 {

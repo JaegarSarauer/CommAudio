@@ -1,5 +1,6 @@
 #include "audiomanager.h"
 #include <iostream>
+#include <QDebug>
 
 QIODevice *device;
 QThread *playThread;
@@ -11,6 +12,8 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
     int bytesRead = file->read((char*)&wavHeader, sizeof(wav_hdr));
     if (bytesRead <= 0)
         return false;
+
+    qDebug() << "SALSA " << wavHeader.SamplesPerSec << " " << wavHeader.NumOfChan << " " << wavHeader.bitsPerSample;
 
     format.setSampleRate(wavHeader.SamplesPerSec);
     format.setChannelCount(wavHeader.NumOfChan);
