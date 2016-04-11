@@ -18,6 +18,7 @@ public:
     QAudioOutput * playAudio(NetworkManager * manager);
 
     void unpauseAudio();
+    void sendAudio(NetworkManager * manager);
 private:
     QAudioFormat format;
     QAudioOutput *audio;

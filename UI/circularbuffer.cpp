@@ -34,11 +34,11 @@ bool CircularBuffer::cbWrite(const char * data, size_t length)
         //error
         return false;
     }
-    if (blocksUnread == numOfBlocks) // buffer full
+    /*if (blocksUnread == numOfBlocks) // buffer full
     {
         //error
         return false;
-    }
+    }*/
     else
     {
         buffer->insert(writePos, data, length);

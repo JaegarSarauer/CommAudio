@@ -15,6 +15,7 @@
 #include "microphonemanager.h"
 #include "networkmanager.h"
 #include "incomingconnthread.h"
+#include "networkaudioplayer.h"
 
 namespace Ui {
 class PeerToPeer;
@@ -56,7 +57,7 @@ private slots:
     void on_SendMicrophone_released();
 
     void on_OpenPathButton_released();
-    void startP2P();
+    void startP2P(const char * ip, int port);
 
 signals:
     void stopMicrophoneRecording();
@@ -72,9 +73,10 @@ private:
     bool isMicrophoneSending = false;
     QThread *audioThread;
     QThread *socketThread;
-    NetworkManager networkManager;
+    NetworkManager * networkManager;
     IncomingConnThread * socketListener;
     AudioPlayThread * bufferListener;
+    NetworkAudioPlayer * netAudioPlayer;
 };
 
 #endif // PEERTOPEER_H

@@ -1,6 +1,7 @@
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #include <windows.h>
+#include <errno.h>
 #include "networkmanager.h"
 
 typedef struct _SOCKET_INFORMATION {
@@ -13,7 +14,7 @@ typedef struct _SOCKET_INFORMATION {
 } SOCKET_INFORMATION, *LPSOCKET_INFORMATION;
 
 SOCKET udpSocket, udpSendSocket, udpRecvSocket;
-SOCKET tcpSocket;
+SOCKET tcpSocket, tcpSendSocket;
 struct sockaddr_in udpPeer, tcpPeer, stDstAddr, stSrcAddr;
 BOOL serverRunning = false;
 int uPort, tPort;
@@ -31,7 +32,7 @@ DWORD WINAPI tcpThread(LPVOID lpParameter);
 DWORD WINAPI startTCPServer(LPVOID n);
 void CALLBACK tcpRoutine(DWORD, DWORD, LPOVERLAPPED, DWORD);
 void sendViaTCP();
-void sendViaUDP();
+void sendViaUDP(const char *);
 
 
 bool NetworkManager::startNetwork()
@@ -154,7 +155,7 @@ bool NetworkManager::createMulticastClientSocket(const char * serverAddr, int po
     return true;
 }
 
-void NetworkManager::connectViaTCP(char * hostname, int port)
+void NetworkManager::connectViaTCP(const char * hostname, int port)
 {
     struct hostent	*hp;
 
@@ -186,13 +187,10 @@ void NetworkManager::cleanUp()
     WSACleanup();
 }
 
-bool NetworkManager::setupUDPforP2P()
+bool NetworkManager::setupUDPforP2P(const char * hostname, int port)
 {
-    memset((char *)&udpPeer, 0, sizeof(udpPeer));
-    udpPeer.sin_family = AF_INET;
-    udpPeer.sin_port = htons(UDP_PORT);
-    udpPeer.sin_addr.s_addr = htonl(INADDR_ANY);
-    //udpPeer.sin_addr.s_addr = peer.sin_addr.s_addr; //does this work??
+    struct hostent	*hp;
+    struct sockaddr_in peer;
 
     /*if ((udpSendSocket = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
     {
@@ -224,17 +222,45 @@ bool NetworkManager::setupUDPforP2P()
         return false;
     }
 
-    if (bind(udpSocket, (struct sockaddr *)&udpPeer, sizeof(udpPeer)) == SOCKET_ERROR)
+    memset((char *)&peer, 0, sizeof(peer));
+    peer.sin_family = AF_INET;
+    peer.sin_port = htons(port);
+    peer.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if (bind(udpSocket, (struct sockaddr *)&peer, sizeof(peer)) == SOCKET_ERROR)
     {
         //writeToScreen("Can't bind name to socket");
+
         return false;
     }
+
+    memset((char *)&udpPeer, 0, sizeof(udpPeer));
+    udpPeer.sin_family = AF_INET;
+    udpPeer.sin_port = htons(port);
+    if ((hp = gethostbyname(hostname)) == NULL)
+    {
+        return false;
+    }
+
+    memcpy((char*) &udpPeer.sin_addr, hp->h_addr, hp->h_length);
+
+    const char * msg = "connect";
+    //sendViaUDP(msg);
     return true;
 }
 
 void NetworkManager::sendMulticast(char * buf, int length)
 {
     if (sendto(udpSocket, buf, length, 0, (struct sockaddr*)&stDstAddr, sizeof(stDstAddr)) == -1)
+    {
+        //sprintf(message, "error: %d", WSAGetLastError());
+        //writeToScreen(message);
+    }
+}
+
+void NetworkManager::sendP2P(char * buf, int length)
+{
+    if (sendto(udpSocket, buf, length, 0, (struct sockaddr*)&udpPeer, sizeof(udpPeer)) == -1)
     {
         //sprintf(message, "error: %d", WSAGetLastError());
         //writeToScreen(message);
@@ -317,13 +343,13 @@ void sendViaTCP()
 --	 screen before closing the socket.
 --
 ---------------------------------------------------------------------------------*/
-void sendViaUDP()
+void sendViaUDP(const char * sbuf)
 {
-    char *sbuf;
+    //char *sbuf;
 
     int server_len = sizeof(udpPeer);
 
-    sbuf = (char*)malloc(DATA_BUFSIZE);
+    //sbuf = (char*)malloc(DATA_BUFSIZE);
 
     // transmit data
     if (sendto(udpSocket, sbuf, strlen(sbuf), 0, (struct sockaddr *)&udpPeer, server_len) == -1)
@@ -587,11 +613,18 @@ void NetworkManager::startTCPReceiver(int port)
     NetworkManager::acceptSocket = NULL;
     tPort = port;
 
+    if ((tcpSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
+    {
+        //display error
+        return;
+    }
+
     if ((tcpHandle = CreateThread(NULL, 0, startTCPServer, 0, 0, &tcpThreadId)) == NULL)
     {
         //display error
         return;
     }
+    serverRunning = true;
 }
 
 /*---------------------------------------------------------------------------------
