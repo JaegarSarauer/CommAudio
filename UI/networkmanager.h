@@ -15,14 +15,15 @@ class NetworkManager
 public:
     //NetworkManager();
     bool startNetwork();
-    void connectViaTCP(char * hostname, int port);
+    void connectViaTCP(const char * hostname, int port);
     void cleanUp();
-    bool setupUDPforP2P();
+    bool setupUDPforP2P(const char * hostname, int port);
     bool createMulticastServerSocket(int port);
     bool createMulticastClientSocket(const char* serverAddr, int port);
     void startUDPReceiver(CircularBuffer *);
     void startTCPReceiver(int port);
     void sendMulticast(char * buf, int length);
+    void sendP2P(char * buf, int length);
 
     static CircularBuffer * incBuffer;
     static SOCKET acceptSocket;

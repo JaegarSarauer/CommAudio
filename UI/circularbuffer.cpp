@@ -29,18 +29,18 @@ char * CircularBuffer::cbRead(int blocksToRead)
 bool CircularBuffer::cbWrite(const char * data, size_t length)
 {
     size_t datalen = strlen(data);
-    if (datalen > blockSize )
+    /*if (datalen > blockSize )
     {
         //error
         return false;
     }
-    if (blocksUnread == numOfBlocks) // buffer full
+    /*if (blocksUnread == numOfBlocks) // buffer full
     {
         //error
         return false;
     }
     else
-    {
+    {*/
         buffer->insert(writePos, data, length);
         blocksUnread++;
         writePos += blockSize;
@@ -49,7 +49,7 @@ bool CircularBuffer::cbWrite(const char * data, size_t length)
             writePos = 0;
         }
         return true;
-    }
+    //}
 }
 
 bool CircularBuffer::isEmpty()
