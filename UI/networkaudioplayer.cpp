@@ -158,6 +158,6 @@ void NetworkAudioPlayer::sendAudio(NetworkManager * manager)
             file->close();
         }
         netManager->sendP2P(tempBuf, DATA_BUFSIZE);
-        Sleep(40);
+        Sleep(120);
     } while (!file->atEnd());
 }
