@@ -5,12 +5,13 @@ CircularBuffer::CircularBuffer(int size, int blocks)
 {
     blockSize = size;
     numOfBlocks = blocks;
-    buffer = new QByteArray(blockSize * numOfBlocks, '\0');
+    buffer = new QByteArray(blockSize * numOfBlocks, 0);
     bufferSize = buffer->size();
     readPos = 0;
     writePos = 0;
     reading = false;
     blocksUnread = 0;
+    bytesWritten = 0;
 }
 
 char * CircularBuffer::cbRead(int blocksToRead)
@@ -48,6 +49,7 @@ bool CircularBuffer::cbWrite(const char * data, size_t length)
         {
             writePos = 0;
         }
+        bytesWritten = length;
         return true;
     //}
 }
@@ -73,6 +75,11 @@ CircularBuffer::~CircularBuffer()
     {
         delete buffer;
     }
+}
+
+int CircularBuffer::getLastBytesWritten()
+{
+    return bytesWritten;
 }
 
 

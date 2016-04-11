@@ -272,8 +272,10 @@ void PeerToPeer::playNextSong() {
 
     QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
     current->setBackgroundColor(Qt::green);
-    netAudioPlayer->setup(new QFile(current->text()));
-    QAudioOutput * audioOut = netAudioPlayer->playAudio(networkManager);
+    //netAudioPlayer->setup(new QFile(current->text()));
+    //QAudioOutput * audioOut = netAudioPlayer->playAudio(networkManager);
+    audioManager->setupAudioPlayer(new QFile(current->text()));
+    QAudioOutput * audioOut = audioManager->playAudio();
 
     QThread * queueThread = new QThread();
     deviceListener = new AudioThread(audioOut);

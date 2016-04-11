@@ -56,7 +56,7 @@ void AudioManager::loadDataIntoBuffer()
             emit finishedReading();
             //file->close();
         }
-        audioBuf->cbWrite(tempBuf, DATA_BUFSIZE);
+        audioBuf->cbWrite(tempBuf, bytesRead);
         //emit finishedLoading();
     }
 }
@@ -79,7 +79,8 @@ void AudioManager::writeDataToDevice() {
         return;
     } else {
         char * data = audioBuf->cbRead(1);
-        device->write(data, DATA_BUFSIZE);
+        int length = audioBuf->getLastBytesWritten();
+        device->write(data, length);
         emit finishedWriting();
     }
     if (file != NULL)
