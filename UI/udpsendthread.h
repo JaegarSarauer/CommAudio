@@ -12,6 +12,7 @@ public:
 
 public slots:
     void send(char * buf, int length);
+
 private:
     SOCKET socket;
     struct sockaddr_in destination;

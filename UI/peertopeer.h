@@ -61,6 +61,7 @@ private slots:
 
 signals:
     void stopMicrophoneRecording();
+    void stopAudio();
 
 private:
     MicrophoneManager *mic;

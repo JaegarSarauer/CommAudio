@@ -120,7 +120,7 @@ bool NetworkManager::createMulticastServerSocket(int port)
         udpSender = new UDPSendThread(udpSocket, stDstAddr);
         udpSender->moveToThread(sendThread);
 
-        connect(this, SIGNAL(sendData(char*,int)), udpSender, SLOT(send(char*,int)));
+        connect(this, SIGNAL(sendData(char*, int)), udpSender, SLOT(send(char*, int)));
         connect(this, SIGNAL(stopSender()), sendThread, SLOT(quit()));
         sendThread->start();
     }
@@ -273,11 +273,6 @@ bool NetworkManager::setupUDPforP2P(const char * hostname, int port)
 
 void NetworkManager::sendMulticast(char * buf, int length)
 {
-    /*if (sendto(udpSocket, buf, length, 0, (struct sockaddr*)&stDstAddr, sizeof(stDstAddr)) == -1)
-    {
-        //sprintf(message, "error: %d", WSAGetLastError());
-        //writeToScreen(message);
-    }*/
     emit sendData(buf, length);
 }
 

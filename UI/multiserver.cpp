@@ -1,6 +1,8 @@
 #include "multiserver.h"
 #include "ui_multiserver.h"
 
+QThread * audioSenderThread;
+
 /*
  * Constructor for the multiserver window class.
  */
@@ -11,9 +13,15 @@ MultiServer::MultiServer(QWidget *parent) :
     ui->setupUi(this);
     audioManager = new AudioManager(this);
     QDir dir;
+    if (!QDir(QDir::currentPath() + "/MusicFiles").exists())
+        QDir().mkdir(QDir::currentPath() + "/MusicFiles");
+    audioManager = new AudioManager(this);
+    dir = (QDir::currentPath() + "/MusicFiles/");
     ui->listMusicFiles->addItems(dir.entryList(QStringList("*.wav")));
     currentQueueIndex = -1;
-    netAudioPlayer = new NetworkAudioPlayer();
+    //netAudioPlayer = new NetworkAudioPlayer();
+    netAudioPlayer = NULL;
+    netManager = new NetworkManager();
 }
 
 /*
@@ -61,24 +69,37 @@ void MultiServer::playNextSong() {
 
     QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
     current->setBackgroundColor(Qt::green);
-    /*audioManager->setupAudioPlayer(new QFile(current->text()));
-    QIODevice * device = audioManager->playAudio();
 
-    QThread *audioThread = new QThread( );
-    deviceListener = new AudioThread(device);
-    deviceListener->moveToThread(audioThread);
+    if (audioSenderThread && audioSenderThread->isRunning())
+    {
+        audioSenderThread->terminate();
+        delete audioSenderThread;
+        audioSenderThread = NULL;
+    }
+    audioSenderThread = new QThread();
 
-    connect( audioThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
-    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
-    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
-    //automatically delete thread and deviceListener object when work is done:
-    connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
-    connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
-    audioThread->start();*/
+    if (netAudioPlayer == NULL)
+    {
+        netAudioPlayer = new NetworkAudioPlayer();
 
+    }
     netAudioPlayer->setup(new QFile(current->text()));
-    QAudioOutput * audioOut = netAudioPlayer->playAudio(netManager);
+    netAudioPlayer->moveToThread(audioSenderThread);
+    //QAudioOutput * audioOut = netAudioPlayer->playAudio(netManager);
 
+    connect(audioSenderThread, SIGNAL(started()), netAudioPlayer, SLOT(playAudio()));
+    connect(netAudioPlayer, SIGNAL(audioStarted(QAudioOutput*)), this, SLOT(checkQueue(QAudioOutput*)));
+    connect(netAudioPlayer, SIGNAL(sendToClient(char*,int)), this, SLOT(sendData(char*, int)));
+    audioSenderThread->start();
+}
+
+void MultiServer::sendData(char * buffer, int length)
+{
+    netManager->sendMulticast(buffer, length);
+}
+
+void MultiServer::checkQueue(QAudioOutput * audioOut)
+{
     QThread * queueThread = new QThread();
     deviceListener = new AudioThread(audioOut);
     deviceListener->moveToThread(queueThread);
@@ -110,17 +131,13 @@ void MultiServer::on_QueueRemoveButton_released()
     qDeleteAll(indexes.begin(), indexes.end());
 }
 
-void MultiServer::on_SendAudioButton_released()
-{
-    //qDebug() << "Send";
-    //NetworkManager netManager;
-   // netManager.startNetwork();
-    //Receiver r;
-    //r.startUDPReceiver(7000);
-}
-
 void MultiServer::on_StopSendingButton_released()
 {
+}
+
+void MultiServer::on_SendAudioButton_released()
+{
+
 }
 
 /*
@@ -155,4 +172,24 @@ void MultiServer::on_BroadcastButton_released()
 
     playNextSong();
 
+}
+
+void MultiServer::on_SendMicrophone_released()
+{
+    if (isMicrophoneSending) {
+        //were no longer sending microphone data
+        emit stopMicrophoneRecording();
+        //if (!isDataSending)
+            //emit on_DataSendingButton_released();
+        ui->SendMicrophone->setText("Start Recording Microphone");
+    } else {
+        //were are now sending microphone data
+        mic = new MicrophoneManager(this);
+        mic->RecordAudio();
+        connect(this, SIGNAL(stopMicrophoneRecording()), mic, SLOT(stopRecording()));
+        //if (isDataSending)
+          //  emit on_DataSendingButton_released();
+        ui->SendMicrophone->setText("Stop Recording Microphone");
+    }
+    isMicrophoneSending = !isMicrophoneSending;
 }

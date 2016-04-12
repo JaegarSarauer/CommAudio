@@ -23,7 +23,6 @@ public:
     bool createMulticastClientSocket(const char* serverAddr, int port);
     void startUDPReceiver(CircularBuffer *);
     void startTCPReceiver(int port);
-    void sendMulticast(char * buf, int length);
     void sendP2P(char * buf, int length);
 
     static CircularBuffer * incBuffer;
@@ -31,6 +30,9 @@ public:
     bool tcpConnected;
 private:
     UDPSendThread * udpSender;
+
+public slots:
+    void sendMulticast(char * buf, int length);
 
 signals:
     void sendData(char *, int);

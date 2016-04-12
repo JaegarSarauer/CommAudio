@@ -4,8 +4,8 @@
 
 void MicrophoneManager::RecordAudio()
 {
-    //destinationFile.setFileName("testrec.raw");
-    //destinationFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
+    destinationFile.setFileName(QDir::currentPath() + "/MusicFiles/" + "testrec2.raw");
+    destinationFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
 
     QAudioFormat format;
     // Set up the desired format, for example:
@@ -24,10 +24,7 @@ void MicrophoneManager::RecordAudio()
 
     audio = new QAudioInput(format, parent);
     //connect(audio, SIGNAL(stateChanged(QAudio::State)), parent, SLOT(handleStateChanged(QAudio::State)));
-    //audio->start(&destinationFile);
-    audioDevice = audio->start();
-
-    connect (audioDevice, SIGNAL(readyRead()), this, SLOT(readDevice())); //data in device
+    audio->start(&destinationFile);
 }
 
 void MicrophoneManager::readDevice()
@@ -105,5 +102,5 @@ void MicrophoneManager::stopRecording()
     audio->stop();
     destinationFile.close();
     delete audio;
-    RawToWavConvert("testrec.raw", "testrec.wav", 8000);
+    RawToWavConvert((QDir::currentPath() + "/MusicFiles/" + "testrec2.raw").toStdString().c_str(), (QDir::currentPath() + "/MusicFiles/" + "testrec2.wav").toStdString().c_str(), 8000);
 }

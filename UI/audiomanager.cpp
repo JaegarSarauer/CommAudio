@@ -1,5 +1,6 @@
 #include "audiomanager.h"
 #include <iostream>
+#include <QDebug>
 
 QIODevice *device;
 QThread *playThread;
@@ -9,8 +10,11 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
     wav_hdr wavHeader;
     file->open(QIODevice::ReadOnly);
     int bytesRead = file->read((char*)&wavHeader, sizeof(wav_hdr));
+   // file->close();
     if (bytesRead <= 0)
         return false;
+
+    qDebug() << "SALSA " << wavHeader.SamplesPerSec << " " << wavHeader.NumOfChan << " " << wavHeader.bitsPerSample;
 
     format.setSampleRate(wavHeader.SamplesPerSec);
     format.setChannelCount(wavHeader.NumOfChan);
@@ -22,14 +26,14 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
 
     audio = new QAudioOutput(format, parent);
     audio->setVolume(constantVolume);
-    audio->setBufferSize(40960);
+    audio->setBufferSize(DATA_BUFSIZE * MAX_BLOCKS);
 
     audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
     return true;
 }
 
 bool AudioManager::setupAudioPlayerNoFile() {
-    format.setSampleRate(44100);
+    /*format.setSampleRate(44100);
     format.setChannelCount(2);
     format.setSampleSize(16);
 
@@ -41,7 +45,7 @@ bool AudioManager::setupAudioPlayerNoFile() {
     audio->setVolume(constantVolume);
     audio->setBufferSize(40960);
 
-    audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
+    audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);*/
     return true;
 }
 
@@ -83,8 +87,7 @@ void AudioManager::writeDataToDevice() {
         device->write(data, length);
         emit finishedWriting();
     }
-    if (file != NULL)
-    {
+    //if (file != NULL) {
         if(!file->atEnd())
         {
            loadDataIntoBuffer();
@@ -92,7 +95,7 @@ void AudioManager::writeDataToDevice() {
             file->close();
             //signal to peer2peer to load next file?????
         }
-    }
+    //}
 }
 
 QAudioOutput *AudioManager::playAudio() {
@@ -106,6 +109,7 @@ QAudioOutput *AudioManager::playAudio() {
                 //stop thread
                 playThread->terminate();
                 delete playThread;
+                playThread = NULL;
                 playThread = new QThread();
             }
         }
@@ -120,7 +124,7 @@ QAudioOutput *AudioManager::playAudio() {
 
         //connect (audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(checkDeviceStatus(QAudio::State)));
 
-        //connect( this, SIGNAL(finishedReading()), bufferListener, SLOT(stop()) );
+        connect( this, SIGNAL(finishedReading()), bufferListener, SLOT(deleteLater()) );
 
         //connect(bufferListener, SIGNAL(finished()), playThread, SLOT(quit()));
 
@@ -152,9 +156,12 @@ void AudioManager::setVolume(double volume) {
 }
 
 void AudioManager::stopAudio() {
-    audio->stop();
+    playThread->terminate();
+    delete playThread;
+    playThread = NULL;
+    //audio->stop();
     //file->close();
-    delete audio;
+    //delete audio;
     PAUSED = false;
     PLAYING = false;
 }
@@ -178,7 +185,10 @@ bool AudioManager::isPlaying() {
 
 AudioManager::~AudioManager()
 {
-
+        audio = NULL;
+        playThread->terminate();
+        delete playThread;
+        playThread = NULL;
 }
 
 CircularBuffer * AudioManager::getAudioBuffer()

@@ -77,9 +77,7 @@ CircularBuffer::~CircularBuffer()
     }
 }
 
-int CircularBuffer::getLastBytesWritten()
-{
+int CircularBuffer::getLastBytesWritten() {
     return bytesWritten;
 }
-
 
