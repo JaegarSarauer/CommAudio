@@ -21,6 +21,7 @@ class AudioManager : public QObject
 public:
     AudioManager(QObject * p) : parent(p) {
         audio = new QAudioOutput(QAudioFormat(), p);
+        audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
     }
 
     QAudioOutput * playAudio();
@@ -52,6 +53,7 @@ signals:
     void finishedLoading();
     void finishedReading();
     void finishedWriting();
+    void killPlayThread();
 
 private slots:
     void loadDataIntoBuffer();

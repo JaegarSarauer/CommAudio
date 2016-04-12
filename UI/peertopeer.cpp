@@ -45,7 +45,7 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
 
 void PeerToPeer::startP2P(const char * ip, int port)
 {
-    CircularBuffer * incomingBuffer = new CircularBuffer(8192, 100);
+   /* CircularBuffer * incomingBuffer = new CircularBuffer(8192, 100);
 
     //start UDP receiver and sender
     // 1 UDP socket for each????
@@ -63,7 +63,7 @@ void PeerToPeer::startP2P(const char * ip, int port)
     connect (playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()));
     //connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
    // connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
-    playThread->start();
+    playThread->start();*/
 }
 
 /*
@@ -120,6 +120,7 @@ void PeerToPeer::on_buttonStopAudio_released()
         return;
     stopThreadLoop = true;
     currentQueueIndex--;
+    qDebug() << "WHAT4";
 }
 
 /*
@@ -284,6 +285,7 @@ void PeerToPeer::playNextSong() {
         stopThreadLoop = false;
         return;
     }
+    qDebug() << "WHAT5";
 
     if (ui->listQueueFiles->count() <= 0) {
         AddStatusMessage("No songs in queue.");
