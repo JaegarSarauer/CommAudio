@@ -184,7 +184,7 @@ void MultiServer::on_SendMicrophone_released()
         ui->SendMicrophone->setText("Start Recording Microphone");
     } else {
         //were are now sending microphone data
-        mic = new MicrophoneManager(this);
+        mic = new MicrophoneManager(this, netManager);
         mic->RecordAudio();
         connect(this, SIGNAL(stopMicrophoneRecording()), mic, SLOT(stopRecording()));
         //if (isDataSending)

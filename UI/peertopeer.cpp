@@ -201,7 +201,7 @@ void PeerToPeer::on_SendMicrophone_released()
         ui->SendMicrophone->setText("Start Recording Microphone");
     } else {
         //were are now sending microphone data
-        mic = new MicrophoneManager(this);
+        mic = new MicrophoneManager(this, networkManager);
         mic->RecordAudio();
         connect(this, SIGNAL(stopMicrophoneRecording()), mic, SLOT(stopRecording()));
         if (isDataSending)
@@ -268,7 +268,7 @@ void PeerToPeer::on_DataSendingButton_released()
 
 void PeerToPeer::sendData(char * buffer, int length)
 {
-    networkManager->sendMulticast(buffer, length);
+    networkManager->sendP2P(buffer, length);
 }
 
 void PeerToPeer::checkQueue(QAudioOutput * audioOut)

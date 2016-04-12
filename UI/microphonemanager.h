@@ -7,6 +7,10 @@
 #include <QTimer>
 #include <QDebug>
 #include <QDir>
+#include <QBuffer>
+#include <QThread>
+#include "audiorecordthread.h"
+#include "networkmanager.h"
 
 class MicrophoneManager : public QObject
 {
@@ -14,13 +18,13 @@ class MicrophoneManager : public QObject
 
 public:
 
-    MicrophoneManager(QObject *p) : parent(p) {}
+    MicrophoneManager(QObject *p, NetworkManager* netManager) : parent(p), networkManager(netManager){}
     void RecordAudio();
     int RawToWavConvert(const char *rawfn, const char *wavfn, long frequency);
 
 private slots:
     void stopRecording();
-    void readDevice();
+    void sendData(char * data, int length);
 
 private:
     QObject *parent;
@@ -28,6 +32,8 @@ private:
     QAudioInput* audio; // Class member
 
     QIODevice * audioDevice;
+    QBuffer *buffer;
+    NetworkManager * networkManager;
 };
 
 #endif // MICROPHONEMANAGER_H

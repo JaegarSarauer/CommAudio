@@ -61,6 +61,7 @@ private slots:
 
     void checkQueue(QAudioOutput * audioOut);
 
+public slots:
     void sendData(char * buffer, int length);
 
 signals:

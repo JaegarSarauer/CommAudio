@@ -25,7 +25,8 @@ SOURCES += main.cpp\
     audioplaythread.cpp \
     microphonemanager.cpp \
     incomingconnthread.cpp \
-    udpsendthread.cpp
+    udpsendthread.cpp \
+    audiorecordthread.cpp
 
 HEADERS  += startwindow.h \
     multiserver.h \
@@ -39,7 +40,8 @@ HEADERS  += startwindow.h \
     audioplaythread.h \
     microphonemanager.h \
     incomingconnthread.h \
-    udpsendthread.h
+    udpsendthread.h \
+    audiorecordthread.h
 
 FORMS    += startwindow.ui \
     multiserver.ui \
