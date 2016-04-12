@@ -7,8 +7,12 @@ AudioPlayThread::AudioPlayThread(CircularBuffer * buf)
     stopChecking = false;
 }
 
+void AudioPlayThread::forceKill() {
+    stopChecking = true;
+}
+
 void AudioPlayThread::checkBuffer() {
-    while (buffer->getBlocksUnread() == 0)
+    while (!stopChecking && buffer->getBlocksUnread() == 0)
     {
     }
     emit bufferHasData();
