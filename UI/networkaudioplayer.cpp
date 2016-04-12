@@ -29,7 +29,6 @@ bool NetworkAudioPlayer::setup(QFile * f) {
     format.setByteOrder(QAudioFormat::LittleEndian);
     format.setSampleType(QAudioFormat::UnSignedInt);
     audio = new QAudioOutput(format, this);
-    //audio->setVolume(0.0);
     //audio->setNotifyInterval(500);
     //audioDevice = audio->start();
     //audioDevice->open(QIODevice::ReadWrite);
@@ -130,6 +129,7 @@ void NetworkAudioPlayer::writeDataToDevice()
         char * data = audioBuffer->cbRead(1);
         int length = audioBuffer->getLastBytesWritten();
         aDevice->write(data, length);
+        audio->setVolume(0.0);
         emit sendToClient(data, length);
         emit finishedWriting();
     }

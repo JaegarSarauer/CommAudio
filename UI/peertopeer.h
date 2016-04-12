@@ -59,6 +59,10 @@ private slots:
     void on_OpenPathButton_released();
     void startP2P(const char * ip, int port);
 
+    void checkQueue(QAudioOutput * audioOut);
+
+    void sendData(char * buffer, int length);
+
 signals:
     void stopMicrophoneRecording();
     void stopAudio();
