@@ -66,6 +66,8 @@ void AudioManager::loadDataIntoBuffer()
 }
 
 void AudioManager::writeDataToDevice() {
+    if (PAUSED)
+        return;
     if (audio == NULL) {
         file->close();
         emit finishedReading();
@@ -79,7 +81,8 @@ void AudioManager::writeDataToDevice() {
     int freeSpace = audio->bytesFree();
     if (freeSpace < DATA_BUFSIZE)
     {
-        emit finishedWriting();
+        if (!PAUSED)
+            emit finishedWriting();
         return;
     } else {
         char * data = audioBuf->cbRead(1);
@@ -155,20 +158,33 @@ void AudioManager::setVolume(double volume) {
     audio->setVolume(volume);
 }
 
-void AudioManager::stopAudio() {
+bool AudioManager::stopAudio() {
+    //delete audioBuf;
+    //emit finishedWriting();
+    if (audio == NULL)
+        return false;
+    qDebug() << "WHAT1";
+    audio->destroyed();
+    //delete audio;
+    qDebug() << "WHAT2";
+    audio = NULL;
     playThread->terminate();
     delete playThread;
     playThread = NULL;
+    delete bufferListener;
+    bufferListener = NULL;
     //audio->stop();
     //file->close();
-    //delete audio;
     PAUSED = false;
     PLAYING = false;
+    return true;
 }
 
 void AudioManager::pauseAudio() {
     PAUSED = true;
+    qDebug() << "pause audio func 22";
     audio->suspend();
+    qDebug() << "pause audio func";
 }
 
 void AudioManager::unpauseAudio() {
