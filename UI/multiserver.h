@@ -47,6 +47,10 @@ private slots:
 
     void on_SendMicrophone_released();
 
+    void checkQueue(QAudioOutput * audioOut);
+
+    void sendData(char * buffer, int length);
+
 private:
     MicrophoneManager *mic;
     bool isDataSending = true;
