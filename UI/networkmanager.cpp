@@ -48,30 +48,6 @@ bool NetworkManager::startNetwork()
         return false;
     }
 
-    /*if ((tcpSocket = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
-    {
-        //display error
-        return false;
-    }
-
-    if ((udpSocket = socket(PF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
-    {
-        //display error
-        return false;
-    }*/
-
-    /*if ((tcpSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
-    {
-        //display error
-        return false;
-    }
-
-    if ((udpSocket = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
-    {
-        //display error
-        return false;
-    }*/
-
     return true;
 }
 
@@ -162,6 +138,8 @@ bool NetworkManager::createMulticastClientSocket(const char * serverAddr, int po
         //display error
         return false;
     }
+
+    NetworkManager::incBuffer = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
     return true;
 }
 
@@ -202,30 +180,6 @@ bool NetworkManager::setupUDPforP2P(const char * hostname, int port)
     struct hostent	*hp;
     struct sockaddr_in peer;
 
-    /*if ((udpSendSocket = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
-    {
-        //display error
-        return false;
-    }
-
-    if (bind(udpSendSocket, (struct sockaddr *)&udpPeer, sizeof(udpPeer)) == SOCKET_ERROR)
-    {
-        //writeToScreen("Can't bind name to socket");
-        return false;
-    }
-
-    if ((udpRecvSocket = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
-    {
-        //display error
-        return false;
-    }
-
-    if (bind(udpRecvSocket, (struct sockaddr *)&udpPeer, sizeof(udpPeer)) == SOCKET_ERROR)
-    {
-        //writeToScreen("Can't bind name to socket");
-        return false;
-    }*/
-
     if ((udpSocket = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
     {
         //display error
@@ -254,9 +208,7 @@ bool NetworkManager::setupUDPforP2P(const char * hostname, int port)
 
     memcpy((char*) &udpPeer.sin_addr, hp->h_addr, hp->h_length);
 
-    const char * msg = "connect";
-    //sendViaUDP(msg);
-    //NetworkManager::incBuffer = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
+    NetworkManager::incBuffer = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
 
     if (udpSender == NULL)
     {
@@ -380,7 +332,11 @@ void sendViaUDP(const char * sbuf)
 
 void NetworkManager::startUDPReceiver(CircularBuffer * buffer)
 {
-    NetworkManager::incBuffer = buffer;
+    if(buffer != NULL)
+    {
+        delete NetworkManager::incBuffer;
+        NetworkManager::incBuffer = buffer;
+    }
     HANDLE udpHandle;
     DWORD udpThreadId;
 

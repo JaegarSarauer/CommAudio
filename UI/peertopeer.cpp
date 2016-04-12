@@ -105,7 +105,6 @@ void PeerToPeer::on_buttonConnect_released()
     //networkManager.connectViaTCP(ip.c_str(), 8321);
     networkManager->startNetwork();
     startP2P(ip.c_str(), port);
-
 }
 
 /*

@@ -32,8 +32,8 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
     return true;
 }
 
-bool AudioManager::setupAudioPlayerNoFile() {
-    /*format.setSampleRate(44100);
+bool AudioManager::setupAudioPlayerNoFile(CircularBuffer * buffer) {
+    format.setSampleRate(44100);
     format.setChannelCount(2);
     format.setSampleSize(16);
 
@@ -45,7 +45,7 @@ bool AudioManager::setupAudioPlayerNoFile() {
     audio->setVolume(constantVolume);
     audio->setBufferSize(40960);
 
-    audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);*/
+    audioBuf = buffer;
     return true;
 }
 
@@ -85,17 +85,17 @@ void AudioManager::writeDataToDevice() {
         char * data = audioBuf->cbRead(1);
         int length = audioBuf->getLastBytesWritten();
         device->write(data, length);
+        audio->setVolume(constantVolume);
         emit finishedWriting();
     }
-    //if (file != NULL) {
+    if (file != NULL) {
         if(!file->atEnd())
         {
            loadDataIntoBuffer();
         } else {
             file->close();
-            //signal to peer2peer to load next file?????
         }
-    //}
+    }
 }
 
 QAudioOutput *AudioManager::playAudio() {

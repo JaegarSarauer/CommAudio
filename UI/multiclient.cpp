@@ -37,17 +37,16 @@ void MultiClient::on_buttonConnect_released()
     }
 
     QThread * playThread = new QThread();
-    audioManager->setupAudioPlayerNoFile();
-    incomingBuffer = audioManager->getAudioBuffer();
-    netManager->startUDPReceiver(incomingBuffer); //pass in circular buffer here
+    audioManager->setupAudioPlayerNoFile(NetworkManager::incBuffer);
+    //incomingBuffer = audioManager->getAudioBuffer();
+    //netManager->startUDPReceiver(incomingBuffer); //pass in circular buffer here
+    netManager->startUDPReceiver(NULL);
 
-    bufferListener = new AudioPlayThread(incomingBuffer);
+    bufferListener = new AudioPlayThread(NetworkManager::incBuffer);
     bufferListener->moveToThread(playThread);
 
     connect (playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()));
     connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
     connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
     playThread->start();
-
-
 }
