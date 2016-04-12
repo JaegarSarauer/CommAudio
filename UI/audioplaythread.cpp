@@ -1,4 +1,5 @@
 #include "audioplaythread.h"
+#include <QDebug>
 
 AudioPlayThread::AudioPlayThread(CircularBuffer * buf)
 {

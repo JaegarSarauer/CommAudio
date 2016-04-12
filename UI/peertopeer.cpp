@@ -14,7 +14,9 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
         QDir().mkdir(QDir::currentPath() + "/MusicFiles");
     audioManager = new AudioManager(this);
     QDir dir = (QDir::currentPath() + "/MusicFiles/");
-    ui->listMusicFiles->addItems(dir.entryList(QStringList("*.wav")));
+    QStringList locals = dir.entryList(QStringList("*.wav"));
+    for (int i = 0; i < locals.length(); i++)
+        ui->listMusicFiles->addItem(QDir::currentPath() + "/MusicFiles/" + locals.at(i));
     currentQueueIndex = -1;
     networkManager = new NetworkManager();
     networkManager->startNetwork();
@@ -53,8 +55,8 @@ void PeerToPeer::startP2P(const char * ip, int port)
     bufferListener->moveToThread(playThread);
 
     connect (playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()));
-    connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
-    connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
+    //connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
+   // connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
     playThread->start();
 }
 
@@ -63,6 +65,7 @@ void PeerToPeer::startP2P(const char * ip, int port)
  */
 PeerToPeer::~PeerToPeer()
 {
+    delete audioManager;
     delete ui;
 }
 
@@ -271,13 +274,18 @@ void PeerToPeer::playNextSong() {
 
     QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
     current->setBackgroundColor(Qt::green);
+    audioManager->setupAudioPlayer(new QFile(current->text()));
+    QAudioOutput * audio = audioManager->playAudio();
+
+    /*QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
+    current->setBackgroundColor(Qt::green);
     netAudioPlayer->setup(new QFile(current->text()));
     QAudioOutput * audioOut = netAudioPlayer->playAudio(networkManager);
-
+*/
     QThread * queueThread = new QThread();
-    deviceListener = new AudioThread(audioOut);
+    deviceListener = new AudioThread(audio);
     deviceListener->moveToThread(queueThread);
-    //connect( queueThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
+    connect( queueThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
     connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
     connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
     connect( deviceListener, SIGNAL(workFinished(const QString)), queueThread, SLOT(quit()) );

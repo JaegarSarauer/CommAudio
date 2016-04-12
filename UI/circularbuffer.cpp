@@ -11,6 +11,7 @@ CircularBuffer::CircularBuffer(int size, int blocks)
     writePos = 0;
     reading = false;
     blocksUnread = 0;
+    bytesWritten = 0;
 }
 
 char * CircularBuffer::cbRead(int blocksToRead)
@@ -48,6 +49,7 @@ bool CircularBuffer::cbWrite(const char * data, size_t length)
         {
             writePos = 0;
         }
+        bytesWritten = length;
         return true;
     //}
 }
@@ -75,4 +77,7 @@ CircularBuffer::~CircularBuffer()
     }
 }
 
+int CircularBuffer::getLastBytesWritten() {
+    return bytesWritten;
+}
 

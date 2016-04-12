@@ -13,6 +13,7 @@ public:
     bool isEmpty();
     bool isFull();
     int getBlocksUnread();
+    int getLastBytesWritten();
     ~CircularBuffer();
 private:
     QByteArray * buffer;
@@ -23,6 +24,7 @@ private:
     int blocksUnread;
     bool reading;
     int bufferSize;
+    int bytesWritten;
 signals:
     void stopWriting();
     void startReading();
