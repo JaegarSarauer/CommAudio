@@ -2,29 +2,39 @@
 #include <stdio.h>
 
 
-void MicrophoneManager::RecordAudio() {
+void MicrophoneManager::RecordAudio()
+{
+    destinationFile.setFileName(QDir::currentPath() + "/MusicFiles/" + "testrec2.raw");
+    destinationFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
+
+    QAudioFormat format;
+    // Set up the desired format, for example:
+    format.setSampleRate(8000);
+    format.setChannelCount(1);
+    format.setSampleSize(8);
+    format.setCodec("audio/pcm");
+    format.setByteOrder(QAudioFormat::LittleEndian);
+    format.setSampleType(QAudioFormat::UnSignedInt);
+
+    QAudioDeviceInfo info = QAudioDeviceInfo::defaultInputDevice();
+    if (!info.isFormatSupported(format)) {
+        qWarning() << "Default format not supported, trying to use the nearest.";
+        format = info.nearestFormat(format);
+    }
+
+    audio = new QAudioInput(format, parent);
+    //connect(audio, SIGNAL(stateChanged(QAudio::State)), parent, SLOT(handleStateChanged(QAudio::State)));
+    audio->start(&destinationFile);
+}
+
+void MicrophoneManager::readDevice()
+{
+    while(true)
     {
-        destinationFile.setFileName("testrec.raw");
-        destinationFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
-
-        QAudioFormat format;
-        // Set up the desired format, for example:
-        format.setSampleRate(8000);
-        format.setChannelCount(1);
-        format.setSampleSize(8);
-        format.setCodec("audio/pcm");
-        format.setByteOrder(QAudioFormat::LittleEndian);
-        format.setSampleType(QAudioFormat::UnSignedInt);
-
-        QAudioDeviceInfo info = QAudioDeviceInfo::defaultInputDevice();
-        if (!info.isFormatSupported(format)) {
-            qWarning() << "Default format not supported, trying to use the nearest.";
-            format = info.nearestFormat(format);
+        if (audioDevice->bytesAvailable() > 8192)
+        {
+            //read data into circular buffer
         }
-
-        audio = new QAudioInput(format, parent);
-        //connect(audio, SIGNAL(stateChanged(QAudio::State)), parent, SLOT(handleStateChanged(QAudio::State)));
-        audio->start(&destinationFile);
     }
 }
 
@@ -92,5 +102,5 @@ void MicrophoneManager::stopRecording()
     audio->stop();
     destinationFile.close();
     delete audio;
-    RawToWavConvert("testrec.raw", "testrec.wav", 8000);
+    RawToWavConvert((QDir::currentPath() + "/MusicFiles/" + "testrec2.raw").toStdString().c_str(), (QDir::currentPath() + "/MusicFiles/" + "testrec2.wav").toStdString().c_str(), 8000);
 }

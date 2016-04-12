@@ -1,31 +1,34 @@
 #ifndef NETWORKMANAGER_H
 #define NETWORKMANAGER_H
 
-#include <WinSock2.h>
-#include "globalobjects.h"
+#include "circularbuffer.h"
+#include "winsock.h"
 
 #define UDP_PORT        7000
-#define DATA_BUFSIZE    4096
+#define TCP_PORT        8000
+#define DATA_BUFSIZE    8196
 #define MAXLEN          256
 #define MAX_BLOCKS      100
-
-
-extern SOCKET udpSocket;
-extern SOCKET tcpSocket;
-extern sockaddr_in udpPeer;
 
 class NetworkManager
 {
 public:
     //NetworkManager();
     bool startNetwork();
-    void connectViaTCP(char * hostname, int port);
+    void connectViaTCP(const char * hostname, int port);
     void cleanUp();
-    void setupUDPforP2P();
+    bool setupUDPforP2P(const char * hostname, int port);
+    bool createMulticastServerSocket(int port);
+    bool createMulticastClientSocket(const char* serverAddr, int port);
+    void startUDPReceiver(CircularBuffer *);
+    void startTCPReceiver(int port);
+    void sendMulticast(char * buf, int length);
+    void sendP2P(char * buf, int length);
 
+    static CircularBuffer * incBuffer;
+    static SOCKET acceptSocket;
     bool tcpConnected;
 private:
-    sockaddr_in peer;
 };
 
 #endif // NETWORKMANAGER_H

@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QTimer>
 #include <QDebug>
+#include <QDir>
 
 class MicrophoneManager : public QObject
 {
@@ -19,11 +20,14 @@ public:
 
 private slots:
     void stopRecording();
+    void readDevice();
 
 private:
     QObject *parent;
     QFile destinationFile;   // Class member
     QAudioInput* audio; // Class member
+
+    QIODevice * audioDevice;
 };
 
 #endif // MICROPHONEMANAGER_H

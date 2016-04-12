@@ -1,11 +1,5 @@
 #include "multiserver.h"
 #include "ui_multiserver.h"
-#include <QtDebug>
-#include "networkmanager.h"
-#include "receiver.h"
-#include "networkaudioplayer.h"
-
-NetworkManager netManager;
 
 /*
  * Constructor for the multiserver window class.
@@ -17,8 +11,13 @@ MultiServer::MultiServer(QWidget *parent) :
     ui->setupUi(this);
     audioManager = new AudioManager(this);
     QDir dir;
+    if (!QDir(QDir::currentPath() + "/MusicFiles").exists())
+        QDir().mkdir(QDir::currentPath() + "/MusicFiles");
+    audioManager = new AudioManager(this);
+    dir = (QDir::currentPath() + "/MusicFiles/");
     ui->listMusicFiles->addItems(dir.entryList(QStringList("*.wav")));
     currentQueueIndex = -1;
+    netAudioPlayer = new NetworkAudioPlayer();
 }
 
 /*
@@ -28,27 +27,6 @@ MultiServer::~MultiServer()
 {
     delete ui;
 }
-
-/*
- * When the user clicks the stop button, stop the audio, and stop the queue
- * thread from attempting to play the next song.
- */
-void MultiServer::on_buttonStopAudio_released()
-{
-    stopThreadLoop = true;
-    audioManager->stopAudio();
-    currentQueueIndex--;
-}
-
-/*
- * When the user clicks the pause button, pause the audio playing.
- */
-void MultiServer::on_buttonPauseAudio_released()
-{
-    if (audioManager->isPlaying())
-        audioManager->pauseAudio();
-}
-
 
 /*void MultiServer::on_sliderSound_actionTriggered(int action)
 {
@@ -74,11 +52,6 @@ void MultiServer::playNextSong() {
         return;
     }
 
-    if (ui->listQueueFiles->count() <= 0) {
-        AddStatusMessage("No songs in queue.");
-        return;
-    }
-
     for (int i = 0; i < ui->listQueueFiles->count(); i++) {
         ui->listQueueFiles->item(i)->setBackgroundColor(Qt::white);
     }
@@ -92,8 +65,8 @@ void MultiServer::playNextSong() {
 
     QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
     current->setBackgroundColor(Qt::green);
-    audioManager->setupAudioPlayer(new QFile(current->text()));
-    /*QIODevice * device = audioManager->playAudio();
+    /*audioManager->setupAudioPlayer(new QFile(current->text()));
+    QIODevice * device = audioManager->playAudio();
 
     QThread *audioThread = new QThread( );
     deviceListener = new AudioThread(device);
@@ -106,6 +79,21 @@ void MultiServer::playNextSong() {
     connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
     connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
     audioThread->start();*/
+
+    netAudioPlayer->setup(new QFile(current->text()));
+    QAudioOutput * audioOut = netAudioPlayer->playAudio(netManager);
+
+    QThread * queueThread = new QThread();
+    deviceListener = new AudioThread(audioOut);
+    deviceListener->moveToThread(queueThread);
+    connect( queueThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), queueThread, SLOT(quit()) );
+    //automatically delete thread and deviceListener object when work is done:
+    connect( queueThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
+    connect( queueThread, SIGNAL(finished()), queueThread, SLOT(deleteLater()) );
+    queueThread->start();
 }
 
 /*
@@ -137,23 +125,6 @@ void MultiServer::on_SendAudioButton_released()
 
 void MultiServer::on_StopSendingButton_released()
 {
-    qDebug() << "Stop";
-    netManager.startNetwork();
-    char host[20] = "192.168.0.10";
-    netManager.connectViaTCP(host, 8000);
-    netManager.setupUDPforP2P();
-    Receiver r;
-    r.startUDPReceiver(7000);
-    QThread * thread = new QThread( );
-    NetworkAudioPlayer * netPlayer = new NetworkAudioPlayer();
-    netPlayer->setParameters();
-    netPlayer->moveToThread(thread);
-
-    connect (audioBuffer, &CircularBuffer::stopReading, netPlayer, &NetworkAudioPlayer::stopAudio);
-    connect (audioBuffer, &CircularBuffer::startReading, netPlayer, &NetworkAudioPlayer::playAudio);
-
-    thread->start();
-
 }
 
 /*
@@ -169,25 +140,43 @@ void MultiServer::successfulConnection(bool connected) {
         AddStatusMessage("Unable to connect to peer.");
 }
 
-/*
- * This function will disconnect the user when they click the disconnect button.
- */
-void MultiServer::on_buttonDisconnect_released()
+void MultiServer::on_BroadcastButton_released()
 {
-    // ---- TODO ---- disconnect this peer here.
-    AddStatusMessage("Disconnected from peer.");
+    if (ui->listQueueFiles->count() <= 0) {
+        AddStatusMessage("No songs in queue.");
+        return;
+    }
+
+    if (!netManager->startNetwork())
+    {
+        return;
+    }
+    int port = ui->linePort->text().toInt();
+    if (!netManager->createMulticastServerSocket(port))
+    {
+        return;
+    }
+
+    playNextSong();
+
 }
 
-/*
- * This function catches a click on the play audio button. If the button is clicked,
- * it will play the audio from where it left off if its paused, if not, it will play
- * the next song in the list.
- */
-void MultiServer::on_buttonPlay_released()
+void MultiServer::on_SendMicrophone_released()
 {
-    if (audioManager->isPaused()) {
-        audioManager->playAudio();
+    if (isMicrophoneSending) {
+        //were no longer sending microphone data
+        emit stopMicrophoneRecording();
+        //if (!isDataSending)
+            //emit on_DataSendingButton_released();
+        ui->SendMicrophone->setText("Start Recording Microphone");
     } else {
-        playNextSong();
+        //were are now sending microphone data
+        mic = new MicrophoneManager(this);
+        mic->RecordAudio();
+        connect(this, SIGNAL(stopMicrophoneRecording()), mic, SLOT(stopRecording()));
+        //if (isDataSending)
+          //  emit on_DataSendingButton_released();
+        ui->SendMicrophone->setText("Stop Recording Microphone");
     }
+    isMicrophoneSending = !isMicrophoneSending;
 }

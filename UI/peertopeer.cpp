@@ -14,9 +14,50 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
         QDir().mkdir(QDir::currentPath() + "/MusicFiles");
     audioManager = new AudioManager(this);
     QDir dir = (QDir::currentPath() + "/MusicFiles/");
-    ui->listMusicFiles->addItems(dir.entryList(QStringList("*.wav")));
-
+    QStringList locals = dir.entryList(QStringList("*.wav"));
+    for (int i = 0; i < locals.length(); i++)
+        ui->listMusicFiles->addItem(QDir::currentPath() + "/MusicFiles/" + locals.at(i));
     currentQueueIndex = -1;
+    networkManager = new NetworkManager();
+    networkManager->startNetwork();
+    netAudioPlayer = new NetworkAudioPlayer();
+    //networkManager.startTCPReceiver(8321);
+
+    /*socketThread = new QThread();
+    socketListener = new IncomingConnThread((void*) NetworkManager::acceptSocket);
+    socketListener->moveToThread(socketThread);
+
+    connect(socketThread, SIGNAL(started()), socketListener, SLOT(checkForConnection()));
+    connect(socketListener, SIGNAL(tcpConnected()), this, SLOT(startP2P()));
+    connect(socketListener, SIGNAL(tcpConnected()), socketThread, SLOT(quit()));
+    //connect (this, SIGNAL(connectionMade()), socketThread, SLOT(quit()));
+
+    connect( socketThread, SIGNAL(finished()), socketListener, SLOT(deleteLater()) );
+    connect( socketThread, SIGNAL(finished()), socketThread, SLOT(deleteLater()) );
+    socketThread->start();*/
+}
+
+void PeerToPeer::startP2P(const char * ip, int port)
+{
+    CircularBuffer * incomingBuffer = new CircularBuffer(8192, 100);
+
+    //start UDP receiver and sender
+    // 1 UDP socket for each????
+    if (!networkManager->setupUDPforP2P(ip, port))
+    {
+        return;
+    }
+    networkManager->startUDPReceiver(incomingBuffer);
+
+    //start thread checking circular buffer
+    QThread * playThread = new QThread();
+    bufferListener = new AudioPlayThread(incomingBuffer);
+    bufferListener->moveToThread(playThread);
+
+    connect (playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()));
+    //connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
+   // connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
+    playThread->start();
 }
 
 /*
@@ -24,6 +65,7 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
  */
 PeerToPeer::~PeerToPeer()
 {
+    delete audioManager;
     delete ui;
 }
 
@@ -40,22 +82,26 @@ void PeerToPeer::on_sliderSound_actionTriggered(int action)
  */
 void PeerToPeer::on_buttonConnect_released()
 {
-    if (ui->lineIPAddress->text().length() <= 0) {
+    if (ui->lineIPAddress->text().length() <= 0)
+    {
         QMessageBox::information(this, tr("Peer to Peer Audio"), tr("Enter an IP!"));
             return;
-        }
+    }
 
-        if (ui->linePort->text().length() <= 0) {
-            QMessageBox::information(this, tr("Peer to Peer Audio"), tr("Enter a port number!"));
-            return;
-        }
+    if (ui->linePort->text().length() <= 0) {
+        QMessageBox::information(this, tr("Peer to Peer Audio"), tr("Enter a port number!"));
+        return;
+    }
 
-        std::string IP(ui->lineIPAddress->text().toUtf8().constData());
-        int port = atoi(ui->linePort->text().toUtf8().constData());
+    std::string ip(ui->lineIPAddress->text().toUtf8().constData());
+    int port = atoi(ui->linePort->text().toUtf8().constData());
 
-        // ---- TODO ---- handle connecting to the peer here, use the above 2 strings as parameters for connection
+    // ---- TODO ---- handle connecting to the peer here, use the above 2 strings as parameters for connection
+    AddStatusMessage("Attempting to Connect...");
 
-        AddStatusMessage("Attempting to Connect...");
+    //networkManager.connectViaTCP(ip.c_str(), 8321);
+    startP2P(ip.c_str(), port);
+
 }
 
 /*
@@ -174,6 +220,27 @@ void PeerToPeer::on_DataSendingButton_released()
     else
         ui->DataSendingButton->setText("Stop Sending Data");
     isDataSending = !isDataSending;
+
+    if (ui->listQueueFiles->count() <= 0) {
+        AddStatusMessage("No songs in queue.");
+        return;
+    }
+
+    for (int i = 0; i < ui->listQueueFiles->count(); i++) {
+        ui->listQueueFiles->item(i)->setBackgroundColor(Qt::white);
+    }
+
+    currentQueueIndex++;
+
+    //go back to beginning of the list
+    if (currentQueueIndex > ui->listQueueFiles->count() - 1) {
+        currentQueueIndex = 0;
+    }
+
+    QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
+    current->setBackgroundColor(Qt::green);
+    netAudioPlayer->setup(new QFile(current->text()));
+    netAudioPlayer->sendAudio(networkManager);
 }
 
 
@@ -210,19 +277,22 @@ void PeerToPeer::playNextSong() {
     audioManager->setupAudioPlayer(new QFile(current->text()));
     QAudioOutput * audio = audioManager->playAudio();
 
-    audioThread = new QThread();
+    /*QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
+    current->setBackgroundColor(Qt::green);
+    netAudioPlayer->setup(new QFile(current->text()));
+    QAudioOutput * audioOut = netAudioPlayer->playAudio(networkManager);
+*/
+    QThread * queueThread = new QThread();
     deviceListener = new AudioThread(audio);
-    deviceListener->moveToThread(audioThread);
-
-    connect( audioThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
-    //connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
+    deviceListener->moveToThread(queueThread);
+    connect( queueThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
     connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
-    connect( deviceListener, SIGNAL(workFinished(const QString)), audioThread, SLOT(quit()));
-    //connect( audio, SIGNAL(stateChanged(QAudio::State)), deviceListener, SLOT(checkForEnding(QAudio::State)));
+    connect( deviceListener, SIGNAL(workFinished(const QString)), queueThread, SLOT(quit()) );
     //automatically delete thread and deviceListener object when work is done:
-    connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
-    connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
-    audioThread->start();
+    connect( queueThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
+    connect( queueThread, SIGNAL(finished()), queueThread, SLOT(deleteLater()) );
+    queueThread->start();
 }
 
 void PeerToPeer::on_OpenPathButton_released()
