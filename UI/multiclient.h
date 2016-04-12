@@ -25,6 +25,16 @@ private slots:
 
     void on_buttonConnect_released();
 
+    void on_buttonDisconnect_released();
+
+    void on_buttonPauseAudio_released();
+
+    void on_buttonStopAudio_released();
+
+    void successfulConnection(bool connected);
+
+    void AddStatusMessage(const QString msg);
+
 private:
     Ui::MultiClient *ui;
     AudioManager *audioManager;

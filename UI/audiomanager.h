@@ -27,7 +27,7 @@ public:
     bool setupAudioPlayer(QFile * file);
     bool setupAudioPlayerNoFile();
     void setVolume(double volume);
-    void stopAudio();
+    bool stopAudio();
     void pauseAudio();
     void unpauseAudio();
     bool isPaused();
