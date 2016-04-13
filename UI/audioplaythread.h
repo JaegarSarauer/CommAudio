@@ -19,6 +19,8 @@ signals:
 public slots:
     void checkBuffer();
 
+    void forceKill();
+
 private:
     CircularBuffer * buffer;
     bool stopChecking;

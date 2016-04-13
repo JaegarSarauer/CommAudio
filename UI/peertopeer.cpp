@@ -24,6 +24,12 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
     //networkManager->startNetwork();
     netAudioPlayer = NULL;
     //startP2P();
+
+    ui->controlsFrame->hide();
+    ui->audioControlsFrame->hide();
+    ui->StatusBar->show();
+    ui->StatusBar->setMaximumHeight(1000);
+    ui->buttonDisconnect->hide();
     //networkManager.startTCPReceiver(8321);
 
     /*socketThread = new QThread();
@@ -42,7 +48,7 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
 
 void PeerToPeer::startP2P(const char * ip, int port)
 {
-    CircularBuffer * incomingBuffer = new CircularBuffer(8192, 100);
+   /* CircularBuffer * incomingBuffer = new CircularBuffer(8192, 100);
 
     //start UDP receiver and sender
     // 1 UDP socket for each????
@@ -60,7 +66,7 @@ void PeerToPeer::startP2P(const char * ip, int port)
     connect (playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()));
     //connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
    // connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
-    playThread->start();
+    playThread->start();*/
 }
 
 /*
@@ -113,9 +119,11 @@ void PeerToPeer::on_buttonConnect_released()
  */
 void PeerToPeer::on_buttonStopAudio_released()
 {
+    if (!audioManager->stopAudio())
+        return;
     stopThreadLoop = true;
-    audioManager->stopAudio();
     currentQueueIndex--;
+    qDebug() << "WHAT4";
 }
 
 /*
@@ -123,6 +131,7 @@ void PeerToPeer::on_buttonStopAudio_released()
  */
 void PeerToPeer::on_buttonPauseAudio_released()
 {
+    qDebug() << "salsa sanders";
     if (audioManager->isPlaying())
         audioManager->pauseAudio();
 }
@@ -133,6 +142,8 @@ void PeerToPeer::on_buttonPauseAudio_released()
 void PeerToPeer::on_QueueAddButton_released()
 {
     QList<QListWidgetItem *> selectedFile = ui->listMusicFiles->selectedItems();
+    if (selectedFile.size() < 1)
+        return;
     QListWidgetItem * index = selectedFile.front();
     ui->listQueueFiles->addItem(index->text());
 }
@@ -176,9 +187,18 @@ void PeerToPeer::AddStatusMessage(const QString msg) {
  */
 // ---- TODO ---- call this function on successful connection
 void PeerToPeer::successfulConnection(bool connected) {
-    if (connected)
+    if (connected) {
+        ui->controlsFrame->show();
+        ui->audioControlsFrame->show();
+        ui->IPControls->hide();
+        ui->PortControls->hide();
+        ui->buttonConnect->hide();
+        ui->welcomeLabel->hide();
+        ui->buttonDisconnect->show();
+        ui->connectionControls->setMaximumHeight(70);
+        ui->StatusBar->setMaximumHeight(200);
         AddStatusMessage("Connection Successful!");
-    else
+    } else
         AddStatusMessage("Unable to connect to peer.");
 }
 
@@ -189,6 +209,16 @@ void PeerToPeer::on_buttonDisconnect_released()
 {
     // ---- TODO ---- disconnect this peer here.
     AddStatusMessage("Disconnected from peer.");
+    ui->controlsFrame->hide();
+    ui->audioControlsFrame->hide();
+    ui->IPControls->show();
+    ui->PortControls->show();
+    ui->buttonConnect->show();
+    ui->StatusBar->show();
+    ui->welcomeLabel->show();
+    ui->buttonDisconnect->hide();
+    ui->StatusBar->setMaximumHeight(1000);
+    ui->connectionControls->setMaximumHeight(250);
 }
 
 void PeerToPeer::on_SendMicrophone_released()
@@ -196,8 +226,6 @@ void PeerToPeer::on_SendMicrophone_released()
     if (isMicrophoneSending) {
         //were no longer sending microphone data
         emit stopMicrophoneRecording();
-        if (!isDataSending)
-            emit on_DataSendingButton_released();
         ui->SendMicrophone->setText("Start Recording Microphone");
     } else {
         //were are now sending microphone data
@@ -205,7 +233,7 @@ void PeerToPeer::on_SendMicrophone_released()
         mic->RecordAudio();
         connect(this, SIGNAL(stopMicrophoneRecording()), mic, SLOT(stopRecording()));
         if (isDataSending)
-            emit on_DataSendingButton_released();
+            on_DataSendingButton_released();
         ui->SendMicrophone->setText("Stop Recording Microphone");
     }
     isMicrophoneSending = !isMicrophoneSending;
@@ -223,10 +251,12 @@ void PeerToPeer::on_DataSendingButton_released()
     }
 
     // ---- TODO ---- Add starting and stopping of data here.
-    if (isDataSending)
-        ui->DataSendingButton->setText("Stop Sending Data");
-    else
+    if (isDataSending) {
+        isDataSending = false;
         ui->DataSendingButton->setText("Start Sending Data");
+        return;
+    } else
+        ui->DataSendingButton->setText("Stop Sending Data");
     isDataSending = !isDataSending;
 
     for (int i = 0; i < ui->listQueueFiles->count(); i++) {
@@ -298,6 +328,7 @@ void PeerToPeer::playNextSong() {
         stopThreadLoop = false;
         return;
     }
+    qDebug() << "WHAT5";
 
     if (ui->listQueueFiles->count() <= 0) {
         AddStatusMessage("No songs in queue.");

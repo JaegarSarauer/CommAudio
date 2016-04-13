@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>389</width>
-    <height>536</height>
+    <width>364</width>
+    <height>587</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <layout class="QHBoxLayout" name="horizontalLayout_3">
     <item>
      <widget class="QWidget" name="widget" native="true">
-      <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,0">
+      <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -73,7 +73,19 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QGroupBox" name="groupBox_6">
+              <widget class="QLabel" name="welcomeLabel">
+               <property name="text">
+                <string>Welcome to the Multicast Client for CommAudio!
+Enter in the IP and Port of the server,
+and click connect to begin listening.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="ConnectionControls">
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
@@ -91,16 +103,16 @@
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_10">
                 <property name="leftMargin">
-                 <number>0</number>
+                 <number>7</number>
                 </property>
                 <property name="topMargin">
                  <number>0</number>
                 </property>
                 <property name="rightMargin">
-                 <number>0</number>
+                 <number>7</number>
                 </property>
                 <item>
-                 <widget class="QGroupBox" name="groupBox_7">
+                 <widget class="QGroupBox" name="IPControls">
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
@@ -125,7 +137,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QGroupBox" name="groupBox_8">
+                 <widget class="QGroupBox" name="PortControls">
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
@@ -180,12 +192,12 @@
            </widget>
           </item>
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_12" stretch="0">
+           <layout class="QVBoxLayout" name="verticalLayout_12" stretch="0,0">
             <property name="spacing">
              <number>10</number>
             </property>
             <item>
-             <widget class="QGroupBox" name="groupBox_4">
+             <widget class="QGroupBox" name="AudioControls">
               <property name="maximumSize">
                <size>
                 <width>16777215</width>
@@ -274,42 +286,18 @@
                  </layout>
                 </widget>
                </item>
-               <item>
-                <widget class="QListWidget" name="StatusBar">
-                 <property name="frameShape">
-                  <enum>QFrame::Panel</enum>
-                 </property>
-                </widget>
-               </item>
               </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="StatusBar">
+              <property name="frameShape">
+               <enum>QFrame::Panel</enum>
+              </property>
              </widget>
             </item>
            </layout>
           </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QFrame" name="frame">
-         <property name="frameShape">
-          <enum>QFrame::StyledPanel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Raised</enum>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_13">
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
          </layout>
         </widget>
        </item>
@@ -323,7 +311,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>389</width>
+     <width>364</width>
      <height>26</height>
     </rect>
    </property>

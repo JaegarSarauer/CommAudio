@@ -108,8 +108,11 @@ int MicrophoneManager::RawToWavConvert(const char *rawfn, const char *wavfn, lon
 
 void MicrophoneManager::stopRecording()
 {
-    audio->stop();
-    destinationFile.close();
-    delete audio;
+    if (audio != NULL) {
+        audio->stop();
+        destinationFile.close();
+        delete audio;
+        audio = NULL;
+    }
     RawToWavConvert((QDir::currentPath() + "/MusicFiles/" + "testrec2.raw").toStdString().c_str(), (QDir::currentPath() + "/MusicFiles/" + "testrec2.wav").toStdString().c_str(), 8000);
 }

@@ -51,7 +51,7 @@ bool NetworkManager::startNetwork()
     return true;
 }
 
-bool NetworkManager::createMulticastServerSocket(int port)
+int NetworkManager::createMulticastServerSocket(const char * IP, int port)
 {
     SOCKADDR_IN stLclAddr;
     BOOL  fFlag = FALSE;
@@ -59,7 +59,7 @@ bool NetworkManager::createMulticastServerSocket(int port)
     if ((udpSocket = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
     {
         //display error
-        return false;
+        return 0;
     }
     stLclAddr.sin_family = AF_INET;
     stLclAddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -67,22 +67,22 @@ bool NetworkManager::createMulticastServerSocket(int port)
     if (bind(udpSocket, (struct sockaddr*) &stLclAddr, sizeof(stLclAddr)) == SOCKET_ERROR)
     {
         //display error
-        return false;
+        return 0;
     }
 
-    stMreq.imr_multiaddr.s_addr = inet_addr("234.7.8.9");
+    stMreq.imr_multiaddr.s_addr = inet_addr(IP);
     stMreq.imr_interface.s_addr = INADDR_ANY;
     if (setsockopt(udpSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&stMreq, sizeof(stMreq)) == SOCKET_ERROR)
     {
         //display error
-        return false;
+        return 0;
     }
 
     /* Disable loopback */
     if (setsockopt(udpSocket, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&fFlag, sizeof(fFlag)) == SOCKET_ERROR)
     {
         //display error
-        return false;
+        return 0;
     }
 
     /* Assign our destination address */
@@ -100,7 +100,7 @@ bool NetworkManager::createMulticastServerSocket(int port)
         connect(this, SIGNAL(stopSender()), sendThread, SLOT(quit()));
         sendThread->start();
     }
-    return true;
+    return 1;
 }
 
 bool NetworkManager::createMulticastClientSocket(const char * serverAddr, int port)

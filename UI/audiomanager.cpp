@@ -26,9 +26,8 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
 
     audio = new QAudioOutput(format, parent);
     audio->setVolume(constantVolume);
-    audio->setBufferSize(DATA_BUFSIZE * MAX_BLOCKS);
+    audio->setBufferSize(DATA_BUFSIZE * 10);
 
-    audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
     return true;
 }
 
@@ -66,20 +65,20 @@ void AudioManager::loadDataIntoBuffer()
 }
 
 void AudioManager::writeDataToDevice() {
+    qDebug() << "WHAT NOW";
+    if (PAUSED)
+        return;
     if (audio == NULL) {
         file->close();
         emit finishedReading();
+        qDebug() << "WHAT NOW!!!!!!!";
         return;
-    }
-    if (device == NULL)
-    {
-        device = audio->start();
-
     }
     int freeSpace = audio->bytesFree();
     if (freeSpace < DATA_BUFSIZE)
     {
-        emit finishedWriting();
+        if (!PAUSED)
+            emit finishedWriting();
         return;
     } else {
         char * data = audioBuf->cbRead(1);
@@ -92,16 +91,20 @@ void AudioManager::writeDataToDevice() {
         if(!file->atEnd())
         {
            loadDataIntoBuffer();
-        } else {
+        } else if (!PAUSED){
             file->close();
         }
     }
 }
 
 QAudioOutput *AudioManager::playAudio() {
+    //if (!PLAYING && !PAUSED)
+    //    return NULL;
     if (!PAUSED) {
+        qDebug() << "this is";
         if (!playThread)
         {
+
             playThread = new QThread( );
         } else {
             if (playThread->isRunning())
@@ -113,18 +116,19 @@ QAudioOutput *AudioManager::playAudio() {
                 playThread = new QThread();
             }
         }
-        device = NULL;
+            device = audio->start();
         bufferListener = new AudioPlayThread(audioBuf);
         bufferListener->moveToThread(playThread);
 
         connect( playThread, SIGNAL(started()), this, SLOT(loadDataIntoBuffer()) );
         connect( playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()) );
         connect( this, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()) );
+        connect( this, SIGNAL(killPlayThread()), bufferListener, SLOT(forceKill()) );
         connect( bufferListener, SIGNAL(bufferHasData()), this, SLOT(writeDataToDevice()));
 
         //connect (audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(checkDeviceStatus(QAudio::State)));
 
-        connect( this, SIGNAL(finishedReading()), bufferListener, SLOT(deleteLater()) );
+        //connect( this, SIGNAL(finishedReading()), bufferListener, SLOT(forceKill()) );
 
         //connect(bufferListener, SIGNAL(finished()), playThread, SLOT(quit()));
 
@@ -155,20 +159,40 @@ void AudioManager::setVolume(double volume) {
     audio->setVolume(volume);
 }
 
-void AudioManager::stopAudio() {
-    playThread->terminate();
-    delete playThread;
-    playThread = NULL;
-    //audio->stop();
-    //file->close();
-    //delete audio;
+bool AudioManager::stopAudio() {
     PAUSED = false;
     PLAYING = false;
+    emit finishedWriting();
+    if (audio == NULL)
+        return false;
+    //delete audioBuf;
+    qDebug() << "WHAT1";
+    //audio->deleteLater();
+    audio->destroyed();
+    //delete audio;
+    qDebug() << "WHAT2";
+    audio = NULL;
+    qDebug() << "WHAT3";
+    if (playThread != NULL) {
+        emit killPlayThread();
+        playThread->terminate();
+        //delete playThread;
+        playThread = NULL;
+    }
+    qDebug() << "WHAT32";
+    //delete bufferListener;
+    //bufferListener = NULL;
+
+    //audio->stop();
+    //file->close();
+    return true;
 }
 
 void AudioManager::pauseAudio() {
     PAUSED = true;
+    qDebug() << "pause audio func 22";
     audio->suspend();
+    qDebug() << "pause audio func";
 }
 
 void AudioManager::unpauseAudio() {
@@ -186,9 +210,10 @@ bool AudioManager::isPlaying() {
 AudioManager::~AudioManager()
 {
         audio = NULL;
-        playThread->terminate();
-        delete playThread;
-        playThread = NULL;
+        emit killPlayThread();
+        //playThread->terminate();
+        //delete playThread;
+        //playThread = NULL;
 }
 
 CircularBuffer * AudioManager::getAudioBuffer()

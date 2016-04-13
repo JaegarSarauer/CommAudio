@@ -11,13 +11,13 @@ MultiServer::MultiServer(QWidget *parent) :
     ui(new Ui::MultiServer)
 {
     ui->setupUi(this);
-    audioManager = new AudioManager(this);
-    QDir dir;
     if (!QDir(QDir::currentPath() + "/MusicFiles").exists())
         QDir().mkdir(QDir::currentPath() + "/MusicFiles");
     audioManager = new AudioManager(this);
-    dir = (QDir::currentPath() + "/MusicFiles/");
-    ui->listMusicFiles->addItems(dir.entryList(QStringList("*.wav")));
+    QDir dir = (QDir::currentPath() + "/MusicFiles/");
+    QStringList locals = dir.entryList(QStringList("*.wav"));
+    for (int i = 0; i < locals.length(); i++)
+        ui->listMusicFiles->addItem(QDir::currentPath() + "/MusicFiles/" + locals.at(i));
     currentQueueIndex = -1;
     //netAudioPlayer = new NetworkAudioPlayer();
     netAudioPlayer = NULL;
@@ -40,6 +40,8 @@ MultiServer::~MultiServer()
 void MultiServer::on_QueueAddButton_released()
 {
     QList<QListWidgetItem *> selectedFile = ui->listMusicFiles->selectedItems();
+    if (selectedFile.size() < 1)
+        return;
     QListWidgetItem * index = selectedFile.front();
     ui->listQueueFiles->addItem(index->text());
 }
@@ -131,10 +133,6 @@ void MultiServer::on_QueueRemoveButton_released()
     qDeleteAll(indexes.begin(), indexes.end());
 }
 
-void MultiServer::on_StopSendingButton_released()
-{
-}
-
 void MultiServer::on_SendAudioButton_released()
 {
 
@@ -155,6 +153,19 @@ void MultiServer::successfulConnection(bool connected) {
 
 void MultiServer::on_BroadcastButton_released()
 {
+    if (isDataSending) {
+        ui->BroadcastButton->setText("Broadcast");
+        isDataSending = false;
+        return;
+    } else {
+        if (isMicrophoneSending) {
+            emit stopMicrophoneRecording();
+            isMicrophoneSending = false;
+        }
+        ui->BroadcastButton->setText("Stop Broadcasting");
+        isDataSending = true;
+    }
+
     if (ui->listQueueFiles->count() <= 0) {
         AddStatusMessage("No songs in queue.");
         return;
@@ -165,9 +176,14 @@ void MultiServer::on_BroadcastButton_released()
         return;
     }
     int port = ui->linePort->text().toInt();
-    if (!netManager->createMulticastServerSocket(port))
+    switch (netManager->createMulticastServerSocket(ui->IPLine->text().toUtf8().constData(), port))
     {
+    case 0:
+        AddStatusMessage("Invalid connection attempt.");
         return;
+    case 1:
+        AddStatusMessage("Successful Connection!");
+        break;
     }
 
     playNextSong();
@@ -179,16 +195,14 @@ void MultiServer::on_SendMicrophone_released()
     if (isMicrophoneSending) {
         //were no longer sending microphone data
         emit stopMicrophoneRecording();
-        //if (!isDataSending)
-            //emit on_DataSendingButton_released();
         ui->SendMicrophone->setText("Start Recording Microphone");
     } else {
         //were are now sending microphone data
         mic = new MicrophoneManager(this, netManager);
         mic->RecordAudio();
         connect(this, SIGNAL(stopMicrophoneRecording()), mic, SLOT(stopRecording()));
-        //if (isDataSending)
-          //  emit on_DataSendingButton_released();
+        if (isDataSending)
+            emit on_BroadcastButton_released();
         ui->SendMicrophone->setText("Stop Recording Microphone");
     }
     isMicrophoneSending = !isMicrophoneSending;

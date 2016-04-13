@@ -41,8 +41,6 @@ private slots:
 
     void on_SendAudioButton_released();
 
-    void on_StopSendingButton_released();
-
     void on_BroadcastButton_released();
 
     void on_SendMicrophone_released();
@@ -53,7 +51,7 @@ private slots:
 
 private:
     MicrophoneManager *mic;
-    bool isDataSending = true;
+    bool isDataSending = false;
     Ui::MultiServer *ui;
     AudioManager *audioManager;
     int currentQueueIndex;
