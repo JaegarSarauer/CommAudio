@@ -10,6 +10,7 @@ void AudioRecordThread::checkMicrophone()
     }
     buffer->seek(position);
     buffer->read(data,sizeof(data));
+    //buffer->seek(position + blockSize);
     position +=MAX_LEN;
     emit sendDataFromMic(data, MAX_LEN);
 }

@@ -22,9 +22,9 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
         ui->listMusicFiles->addItem(QDir::currentPath() + "/MusicFiles/" + locals.at(i));
     currentQueueIndex = -1;
     networkManager = new NetworkManager();
-    //networkManager->startNetwork();
+    networkManager->startNetwork();
+    fileManager = new FileManager(networkManager);
     netAudioPlayer = NULL;
-    //startP2P();
 
     ui->controlsFrame->hide();
     ui->fileTransferControls->hide();
@@ -32,20 +32,11 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
     ui->StatusBar->show();
     ui->StatusBar->setMaximumHeight(1000);
     ui->buttonDisconnect->hide();
-    //networkManager.startTCPReceiver(8321);
-
-    /*socketThread = new QThread();
-    socketListener = new IncomingConnThread((void*) NetworkManager::acceptSocket);
-    socketListener->moveToThread(socketThread);
-
-    connect(socketThread, SIGNAL(started()), socketListener, SLOT(checkForConnection()));
-    connect(socketListener, SIGNAL(tcpConnected()), this, SLOT(startP2P()));
-    connect(socketListener, SIGNAL(tcpConnected()), socketThread, SLOT(quit()));
-    //connect (this, SIGNAL(connectionMade()), socketThread, SLOT(quit()));
-
-    connect( socketThread, SIGNAL(finished()), socketListener, SLOT(deleteLater()) );
-    connect( socketThread, SIGNAL(finished()), socketThread, SLOT(deleteLater()) );
-    socketThread->start();*/
+}
+void PeerToPeer::startTCP(int port)
+{
+    networkManager->createTCPSocket();
+    networkManager->startTCPReceiver(port); // use default port for now
 }
 
 void PeerToPeer::startP2P(const char * ip, int port)
@@ -107,13 +98,12 @@ void PeerToPeer::on_buttonConnect_released()
     }
 
     std::string ip(ui->lineIPAddress->text().toUtf8().constData());
-    int port = atoi(ui->linePort->text().toUtf8().constData());
+    int port = atoi(ui->lineUDPPort->text().toUtf8().constData());
 
     // ---- TODO ---- handle connecting to the peer here, use the above 2 strings as parameters for connection
     AddStatusMessage("Attempting to Connect...");
 
-    //networkManager.connectViaTCP(ip.c_str(), 8321);
-    networkManager->startNetwork();
+    startTCP(8321);
     startP2P(ip.c_str(), port);
     successfulConnection(true);
 }
@@ -391,4 +381,29 @@ void PeerToPeer::on_OpenPathButton_released()
     ui->listMusicFiles->addItems(QFileDialog::getOpenFileNames(this, tr("Open Wav files."),
                                                     QDir::currentPath() + "/MusicFiles",
                                                     tr("Wav Files (*.wav)")));
+}
+
+
+void PeerToPeer::on_requestFileButton_released()
+{
+    std::string ip = ui->lineIPAddress->text().toStdString();
+    // attempt to connect to peer via TCP
+    if (networkManager->connectToPeer(ip.c_str(), 8321)) //will get port from UI
+    {
+        AddStatusMessage("Successfully connected to peer.");
+    } else {
+        AddStatusMessage("Connection to peer failed.");
+    }
+    //get filename from UI
+    if (fileManager->requestFile(ui->filenameEdit->text().toStdString().c_str()))
+    {
+        AddStatusMessage("Cannot create file.");
+        QThread * fileCheckerThread = new QThread();
+        fileManager->moveToThread(fileCheckerThread);
+        connect(fileCheckerThread, SIGNAL(started()), fileManager, SLOT(checkBuffer()));
+        connect(fileManager, SIGNAL(fileDone()), fileCheckerThread, SLOT(quit()));
+        fileCheckerThread->start();
+    } else {
+        AddStatusMessage("File created. Requesting file...");
+    }
 }

@@ -13,6 +13,10 @@ typedef struct _SOCKET_INFORMATION {
 
 } SOCKET_INFORMATION, *LPSOCKET_INFORMATION;
 
+#define NO_REQUEST_SENT     0
+#define REQUEST_SENT        1
+
+int status = NO_REQUEST_SENT;
 SOCKET udpSocket, udpSendSocket, udpRecvSocket;
 SOCKET tcpSocket, tcpSendSocket;
 struct sockaddr_in udpPeer, tcpPeer, stDstAddr, stSrcAddr;
@@ -21,8 +25,10 @@ int uPort, tPort;
 HANDLE hWriteFile, hServerLogFile;
 WSAEVENT udpEvent, tcpEvent;
 struct ip_mreq stMreq;
+char incFilename[256];
 
 CircularBuffer * NetworkManager::incBuffer;
+CircularBuffer * NetworkManager::tcpBuffer;
 SOCKET NetworkManager::acceptSocket;
 
 DWORD WINAPI udpThread(LPVOID lpParameter);
@@ -33,6 +39,7 @@ DWORD WINAPI startTCPServer(LPVOID n);
 void CALLBACK tcpRoutine(DWORD, DWORD, LPOVERLAPPED, DWORD);
 void sendViaTCP();
 void sendViaUDP(const char *);
+bool connectP2P(const char * hostname, int port);
 
 
 bool NetworkManager::startNetwork()
@@ -109,7 +116,7 @@ bool NetworkManager::createMulticastClientSocket(const char * serverAddr, int po
     SOCKADDR_IN stLclAddr;
     BOOL  fFlag = TRUE;
 
-    if ((udpSocket = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
+    if ((udpSocket = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
     {
         //display error
         return false;
@@ -142,8 +149,30 @@ bool NetworkManager::createMulticastClientSocket(const char * serverAddr, int po
     NetworkManager::incBuffer = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
     return true;
 }
+bool NetworkManager::createTCPSocket()
+{
+    BOOL  fFlag = TRUE;
+    if ((tcpSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
+    {
+        //display error
+        return false;
+    }
 
-void NetworkManager::connectViaTCP(const char * hostname, int port)
+    if (setsockopt(tcpSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&fFlag, sizeof(fFlag)) == SOCKET_ERROR)
+    {
+        //display error
+        return false;
+    }
+    NetworkManager::tcpBuffer = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
+    return true;
+}
+
+bool NetworkManager::connectToPeer(const char * hostname, int port)
+{
+    return connectP2P(hostname, port);
+}
+
+bool connectP2P(const char * hostname, int port)
 {
     struct hostent	*hp;
 
@@ -155,17 +184,15 @@ void NetworkManager::connectViaTCP(const char * hostname, int port)
     if ((hp = gethostbyname(hostname)) == NULL)
     {
         //writeToScreen("Can't get server's IP address");
-        return;
+        return false;
     }
 
     memcpy((char *)&tcpPeer.sin_addr, hp->h_addr, hp->h_length);
-    /*if (connect(tcpSocket, (struct sockaddr *)&tcpPeer, sizeof(tcpPeer)) == -1)
+    if (connect(tcpSocket, (struct sockaddr *)&tcpPeer, sizeof(tcpPeer)) == -1)
     {
         //writeToScreen("Can't connect to server");
-        return;
-    }*/
-
-    tcpConnected = true;
+        return false;
+    }
 }
 
 void NetworkManager::cleanUp()
@@ -574,8 +601,6 @@ void CALLBACK udpRoutine(DWORD errorCode, DWORD bytesTransferred, LPOVERLAPPED o
     {
         if (!(NetworkManager::incBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len)))
         {
-            //error
-            int test = 0;
         }
     }
 }
@@ -636,13 +661,6 @@ DWORD WINAPI startTCPServer(LPVOID n)
     int error = 0;
     char message[256];
     HANDLE threadHandle;
-
-    // Create a stream socket
-    /*if ((tcpSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
-    {
-        //writeToScreen("Can't create a socket");
-        //exit(1);
-    }*/
 
     // Bind an address to the socket
     memset((char *)&tcpServer, 0, sizeof(tcpServer));
@@ -809,7 +827,6 @@ void CALLBACK tcpRoutine(DWORD errorCode, DWORD bytesTransferred, LPOVERLAPPED o
 {
     LPSOCKET_INFORMATION socketInfo = (LPSOCKET_INFORMATION)overlapped;
     DWORD newFlags;
-    char data[MAXLEN] = { 0 };
     int error = 0;
     char message[256];
 
@@ -820,17 +837,25 @@ void CALLBACK tcpRoutine(DWORD errorCode, DWORD bytesTransferred, LPOVERLAPPED o
 
     if (bytesTransferred > 0)
     {
-        memcpy(data, socketInfo->DataBuf.buf, socketInfo->DataBuf.len);
-        switch (data[0])
+        switch(status)
         {
-            //case stop sending
-            //emit stop sending signal
-            //case start sending
-            //case start sending signal
-            default:
-                break;
+        case NO_REQUEST_SENT: //haven't made request, so incoming is file name
+        {
+            memcpy(incFilename, socketInfo->DataBuf.buf, socketInfo->DataBuf.len);
+            // need to trim beginning SOH
+            break;
         }
+        case REQUEST_SENT: // request made, so incoming might be data or request
+            if (socketInfo->DataBuf.buf[0] == 1)
+            {
+                memcpy(incFilename, socketInfo->DataBuf.buf, socketInfo->DataBuf.len);
 
+                if (!(NetworkManager::tcpBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len)))
+                {
+                }
+            }
+            break;
+        }
     }
     else {
         return;
