@@ -17,6 +17,7 @@
 #include "networkmanager.h"
 #include "incomingconnthread.h"
 #include "networkaudioplayer.h"
+#include "filemanager.h"
 
 namespace Ui {
 class PeerToPeer;
@@ -61,6 +62,9 @@ private slots:
     void startP2P(const char * ip, int port);
 
     void checkQueue(QAudioOutput * audioOut);
+    void startTCP(int port);
+
+    void on_requestFileButton_released();
 
 public slots:
     void sendData(char * buffer, int length);
@@ -85,6 +89,8 @@ private:
     IncomingConnThread * socketListener;
     AudioPlayThread * bufferListener;
     NetworkAudioPlayer * netAudioPlayer;
+    FileManager * fileManager;
 };
 
 #endif // PEERTOPEER_H
+

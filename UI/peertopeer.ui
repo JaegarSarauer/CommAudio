@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>728</width>
-    <height>725</height>
+    <height>779</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -264,10 +264,10 @@ Please enter an IP, Port and press Connect to get started.</string>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_14">
                    <item>
-                    <widget class="QLineEdit" name="lineEdit"/>
+                    <widget class="QLineEdit" name="filenameEdit"/>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pushButton">
+                    <widget class="QPushButton" name="requestFileButton">
                      <property name="text">
                       <string>Request File</string>
                      </property>
@@ -505,7 +505,7 @@ Please enter an IP, Port and press Connect to get started.</string>
      <x>0</x>
      <y>0</y>
      <width>728</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
