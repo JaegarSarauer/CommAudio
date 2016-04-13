@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include "audiomanager.h"
+#include "localaudiomanager.h"
 #include "audiothread.h"
 #include "microphonemanager.h"
 #include "networkmanager.h"
@@ -73,6 +74,7 @@ private:
     Ui::PeerToPeer *ui;
     bool isDataSending = true;
     AudioManager *audioManager;
+    LocalAudioManager *localAudioManager;
     int currentQueueIndex;
     AudioThread *deviceListener;
     bool stopThreadLoop = false;

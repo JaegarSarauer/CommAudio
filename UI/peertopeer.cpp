@@ -15,6 +15,7 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
     if (!QDir(QDir::currentPath() + "/MusicFiles").exists())
         QDir().mkdir(QDir::currentPath() + "/MusicFiles");
     audioManager = new AudioManager(this);
+    localAudioManager = new LocalAudioManager(this);
     QDir dir = (QDir::currentPath() + "/MusicFiles/");
     QStringList locals = dir.entryList(QStringList("*.wav"));
     for (int i = 0; i < locals.length(); i++)
@@ -86,6 +87,7 @@ PeerToPeer::~PeerToPeer()
 void PeerToPeer::on_sliderSound_actionTriggered(int action)
 {
     audioManager->setVolume((double)ui->sliderSound->sliderPosition() / 100);
+    localAudioManager->setVolume((double)ui->sliderSound->sliderPosition() / 100);
 }
 
 /*
@@ -122,11 +124,12 @@ void PeerToPeer::on_buttonConnect_released()
  */
 void PeerToPeer::on_buttonStopAudio_released()
 {
-    if (!audioManager->stopAudio())
-        return;
+    localAudioManager->stopAudio();
     stopThreadLoop = true;
     currentQueueIndex--;
     qDebug() << "WHAT4";
+    if (!audioManager->stopAudio())
+        return;
 }
 
 /*
@@ -134,9 +137,8 @@ void PeerToPeer::on_buttonStopAudio_released()
  */
 void PeerToPeer::on_buttonPauseAudio_released()
 {
-    qDebug() << "salsa sanders";
-    if (audioManager->isPlaying())
-        audioManager->pauseAudio();
+    if (localAudioManager->isPlaying())
+        localAudioManager->pauseAudio();
 }
 
 /*
@@ -168,8 +170,8 @@ void PeerToPeer::on_QueueRemoveButton_released()
  */
 void PeerToPeer::on_buttonPlay_released()
 {
-    if (audioManager->isPaused()) {
-        audioManager->playAudio();
+    if (localAudioManager->isPaused()) {
+        localAudioManager->playAudio();
     } else {
         playNextSong();
     }
@@ -335,7 +337,6 @@ void PeerToPeer::playNextSong() {
         stopThreadLoop = false;
         return;
     }
-    qDebug() << "WHAT5";
 
     if (ui->listQueueFiles->count() <= 0) {
         AddStatusMessage("No songs in queue.");
@@ -356,10 +357,23 @@ void PeerToPeer::playNextSong() {
     QListWidgetItem * current = ui->listQueueFiles->item(currentQueueIndex);
     current->setBackgroundColor(Qt::green);
 
-    audioManager->setupAudioPlayer(new QFile(current->text()));
-    QAudioOutput * audio = audioManager->playAudio();
 
-    QThread * queueThread = new QThread();
+    localAudioManager->setupAudioPlayer(new QFile(current->text()));
+    QAudioOutput * audio = localAudioManager->playAudio();
+
+    QThread *audioThread = new QThread( );
+    deviceListener = new AudioThread(audio);
+    deviceListener->moveToThread(audioThread);
+
+    connect( audioThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
+    connect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
+    //automatically delete thread and deviceListener object when work is done:
+    connect( audioThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
+    connect( audioThread, SIGNAL(finished()), audioThread, SLOT(deleteLater()) );
+    audioThread->start();
+
+    /*QThread * queueThread = new QThread();
     deviceListener = new AudioThread(audio);
     deviceListener->moveToThread(queueThread);
     connect( queueThread, SIGNAL(started()), deviceListener, SLOT(checkForEnding()) );
@@ -369,7 +383,7 @@ void PeerToPeer::playNextSong() {
     //automatically delete thread and deviceListener object when work is done:
     connect( queueThread, SIGNAL(finished()), deviceListener, SLOT(deleteLater()) );
     connect( queueThread, SIGNAL(finished()), queueThread, SLOT(deleteLater()) );
-    queueThread->start();
+    queueThread->start();*/
 }
 
 void PeerToPeer::on_OpenPathButton_released()
