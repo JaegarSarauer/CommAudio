@@ -26,6 +26,7 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
     //startP2P();
 
     ui->controlsFrame->hide();
+    ui->fileTransferControls->hide();
     ui->audioControlsFrame->hide();
     ui->StatusBar->show();
     ui->StatusBar->setMaximumHeight(1000);
@@ -190,6 +191,7 @@ void PeerToPeer::AddStatusMessage(const QString msg) {
 // ---- TODO ---- call this function on successful connection
 void PeerToPeer::successfulConnection(bool connected) {
     if (connected) {
+        ui->fileTransferControls->show();
         ui->controlsFrame->show();
         ui->audioControlsFrame->show();
         ui->IPControls->hide();
@@ -199,6 +201,7 @@ void PeerToPeer::successfulConnection(bool connected) {
         ui->buttonDisconnect->show();
         ui->connectionControls->setMaximumHeight(70);
         ui->StatusBar->setMaximumHeight(200);
+        ui->portControlsUDP->hide();
         AddStatusMessage("Connection Successful!");
     } else
         AddStatusMessage("Unable to connect to peer.");
@@ -211,6 +214,7 @@ void PeerToPeer::on_buttonDisconnect_released()
 {
     // ---- TODO ---- disconnect this peer here.
     AddStatusMessage("Disconnected from peer.");
+    ui->fileTransferControls->hide();
     ui->controlsFrame->hide();
     ui->audioControlsFrame->hide();
     ui->IPControls->show();
@@ -219,6 +223,7 @@ void PeerToPeer::on_buttonDisconnect_released()
     ui->StatusBar->show();
     ui->welcomeLabel->show();
     ui->buttonDisconnect->hide();
+    ui->portControlsUDP->show();
     ui->StatusBar->setMaximumHeight(1000);
     ui->connectionControls->setMaximumHeight(250);
 }
@@ -255,10 +260,10 @@ void PeerToPeer::on_DataSendingButton_released()
     // ---- TODO ---- Add starting and stopping of data here.
     if (isDataSending) {
         isDataSending = false;
-        ui->DataSendingButton->setText("Start Sending Data");
+        //ui->DataSendingButton->setText("Start Sending Data");
         return;
     } else
-        ui->DataSendingButton->setText("Stop Sending Data");
+        //ui->DataSendingButton->setText("Stop Sending Data");
     isDataSending = !isDataSending;
 
     for (int i = 0; i < ui->listQueueFiles->count(); i++) {
