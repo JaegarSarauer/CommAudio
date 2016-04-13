@@ -42,6 +42,7 @@ bool AudioManager::setupAudioPlayerNoFile(CircularBuffer * buffer) {
 
     audio = new QAudioOutput(format, parent);
     audio->setVolume(constantVolume);
+    audio->setBufferSize(DATA_BUFSIZE*10);
     audioBuf = buffer;
     return true;
 }
