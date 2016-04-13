@@ -12,7 +12,7 @@
 #include "circularbuffer.h"
 #include "audioplaythread.h"
 
-#define DATA_BUFSIZE    8196
+#define DATA_BUFSIZE    8192
 #define MAX_BLOCKS      100
 
 class AudioManager : public QObject
@@ -48,7 +48,7 @@ private:
     double constantVolume = 1.0;
     CircularBuffer * audioBuf;
     AudioPlayThread * bufferListener;
-
+    long blockCount = 0;
 
 signals:
     void finishedLoading();
