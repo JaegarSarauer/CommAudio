@@ -26,7 +26,7 @@ public:
 
     QAudioOutput * playAudio();
     bool setupAudioPlayer(QFile * file);
-    bool setupAudioPlayerNoFile();
+    bool setupAudioPlayerNoFile(CircularBuffer *);
     void setVolume(double volume);
     bool stopAudio();
     void pauseAudio();

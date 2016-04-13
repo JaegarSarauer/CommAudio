@@ -29,7 +29,6 @@ bool NetworkAudioPlayer::setup(QFile * f) {
     format.setByteOrder(QAudioFormat::LittleEndian);
     format.setSampleType(QAudioFormat::UnSignedInt);
     audio = new QAudioOutput(format, this);
-    //audio->setVolume(0.0);
     //audio->setNotifyInterval(500);
     //audioDevice = audio->start();
     //audioDevice->open(QIODevice::ReadWrite);
@@ -49,14 +48,14 @@ void NetworkAudioPlayer::loadDataIntoBuffer()
             emit finishedReading();
             //file->close();
         }
-        audioBuffer->cbWrite(tempBuf, DATA_BUFSIZE);
+        audioBuffer->cbWrite(tempBuf, bytesRead);
         //emit finishedLoading();
     }
 }
 
-QAudioOutput * NetworkAudioPlayer::playAudio(NetworkManager * manager)
+void NetworkAudioPlayer::playAudio()
 {
-    netManager = manager;
+    //netManager = manager;
     if (!PAUSED) {
         if (!aPlayThread)
         {
@@ -93,7 +92,8 @@ QAudioOutput * NetworkAudioPlayer::playAudio(NetworkManager * manager)
     } else {
         unpauseAudio();
     }
-    return audio;
+    //return audio;
+    emit audioStarted(audio);
 }
 
 void NetworkAudioPlayer::writeDataToDevice()
@@ -121,14 +121,16 @@ void NetworkAudioPlayer::writeDataToDevice()
         aDevice = audio->start();
     }
     int freeSpace = audio->bytesFree();
-    if (freeSpace < DATA_BUFSIZE*2)
+    if (freeSpace < DATA_BUFSIZE)
     {
         emit finishedWriting();
         return;
     } else {
         char * data = audioBuffer->cbRead(1);
-        aDevice->write(data, DATA_BUFSIZE);
-        netManager->sendMulticast(data, DATA_BUFSIZE);
+        int length = audioBuffer->getLastBytesWritten();
+        aDevice->write(data, length);
+        audio->setVolume(0.0);
+        emit sendToClient(data, length);
         emit finishedWriting();
     }
     if (!file->atEnd())

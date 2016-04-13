@@ -45,25 +45,20 @@ void MultiClient::on_buttonConnect_released()
         return;
     }
 
-    successfulConnection(true);
+    QThread * playThread = new QThread();
+    audioManager->setupAudioPlayerNoFile(NetworkManager::incBuffer);
+    //incomingBuffer = audioManager->getAudioBuffer();
+    //netManager->startUDPReceiver(incomingBuffer); //pass in circular buffer here
+    netManager->startUDPReceiver(NULL);
 
-    //--------------------------------------------
-    //ISSUE HERE, crashing when unable to connect
-    //--------------------------------------------
-
-    /*QThread * playThread = new QThread();
-    audioManager->setupAudioPlayerNoFile();
-    incomingBuffer = audioManager->getAudioBuffer();
-    netManager->startUDPReceiver(incomingBuffer); //pass in circular buffer here
-
-    bufferListener = new AudioPlayThread(incomingBuffer);
+    bufferListener = new AudioPlayThread(NetworkManager::incBuffer);
     bufferListener->moveToThread(playThread);
 
     connect (playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()));
     connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
     connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
-    playThread->start();*/
 
+    playThread->start();
 }
 
 /*
@@ -114,5 +109,4 @@ void MultiClient::AddStatusMessage(const QString msg) {
 
 void MultiClient::on_buttonStopAudio_released()
 {
-
 }

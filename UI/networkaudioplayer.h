@@ -15,8 +15,6 @@ class NetworkAudioPlayer : public QObject
 public:
     NetworkAudioPlayer();
     bool setup(QFile *);
-    QAudioOutput * playAudio(NetworkManager * manager);
-
     void unpauseAudio();
     void sendAudio(NetworkManager * manager);
 private:
@@ -34,9 +32,13 @@ private:
 signals:
     void finishedReading();
     void finishedWriting();
+    void audioStarted(QAudioOutput *);
+    void sendToClient(char *, int);
 private slots:
     void loadDataIntoBuffer();
     void writeDataToDevice();
+public slots:
+    void playAudio();
 };
 
 #endif // NETWORKAUDIOPLAYER_H

@@ -24,18 +24,27 @@ void MicrophoneManager::RecordAudio()
 
     audio = new QAudioInput(format, parent);
     //connect(audio, SIGNAL(stateChanged(QAudio::State)), parent, SLOT(handleStateChanged(QAudio::State)));
-    audio->start(&destinationFile);
-}
-
-void MicrophoneManager::readDevice()
-{
-    while(true)
+    buffer = new QBuffer();
+    if (!buffer->open(QIODevice::ReadWrite))
     {
-        if (audioDevice->bytesAvailable() > 8192)
-        {
-            //read data into circular buffer
-        }
+        qWarning("unable to open buffer");
     }
+    audio->start(buffer);
+    audioDevice = buffer;
+    //audio->start(&destinationFile);
+
+    QThread * recordThread = new QThread();
+    AudioRecordThread * micListener = new AudioRecordThread(audioDevice);
+    micListener->moveToThread(recordThread);
+
+    connect(audioDevice, SIGNAL(readyRead()), micListener, SLOT(checkMicrophone()));
+    connect(micListener, SIGNAL(sendDataFromMic(char *, int)), this, SLOT(sendData(char *, int)));
+    connect(audioDevice, SIGNAL( bytesWritten ( qint64 )), SLOT( bytesWritten ( qint64 )) );
+    recordThread->start();
+}
+void MicrophoneManager::sendData(char * data, int length)
+{
+    networkManager->sendP2P(data, length);
 }
 
 int MicrophoneManager::RawToWavConvert(const char *rawfn, const char *wavfn, long frequency) {
