@@ -48,7 +48,7 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
 
 void PeerToPeer::startP2P(const char * ip, int port)
 {
-   /* CircularBuffer * incomingBuffer = new CircularBuffer(8192, 100);
+   //CircularBuffer * incomingBuffer = new CircularBuffer(8192, 100);
 
     //start UDP receiver and sender
     // 1 UDP socket for each????
@@ -56,17 +56,20 @@ void PeerToPeer::startP2P(const char * ip, int port)
     {
         return;
     }
-    networkManager->startUDPReceiver(incomingBuffer);
 
-    //start thread checking circular buffer
     QThread * playThread = new QThread();
-    bufferListener = new AudioPlayThread(incomingBuffer);
+    //audioManager->setupAudioPlayerNoFile(NetworkManager::incBuffer);
+    audioManager->setupAudioPlayerP2P(NetworkManager::incBuffer);
+    networkManager->startUDPReceiver(NULL);
+
+    bufferListener = new AudioPlayThread(NetworkManager::incBuffer);
     bufferListener->moveToThread(playThread);
 
     connect (playThread, SIGNAL(started()), bufferListener, SLOT(checkBuffer()));
-    //connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
-   // connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
-    playThread->start();*/
+    connect( bufferListener, SIGNAL(bufferHasData()), audioManager, SLOT(writeDataToDevice()));
+    connect( audioManager, SIGNAL(finishedWriting()), bufferListener, SLOT(checkBuffer()));
+
+    playThread->start();
 }
 
 /*
@@ -111,6 +114,7 @@ void PeerToPeer::on_buttonConnect_released()
     //networkManager.connectViaTCP(ip.c_str(), 8321);
     networkManager->startNetwork();
     startP2P(ip.c_str(), port);
+    successfulConnection(true);
 }
 
 /*

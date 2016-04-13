@@ -176,7 +176,9 @@ void MultiServer::on_BroadcastButton_released()
         return;
     }
     int port = ui->linePort->text().toInt();
-    switch (netManager->createMulticastServerSocket(ui->IPLine->text().toUtf8().constData(), port))
+    //switch (netManager->createMulticastServerSocket(ui->IPLine->text().toUtf8().constData(), port))
+
+    switch (netManager->createMulticastServerSocket("234.7.8.9", port))
     {
     case 0:
         AddStatusMessage("Invalid connection attempt.");

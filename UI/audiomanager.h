@@ -21,12 +21,13 @@ class AudioManager : public QObject
 public:
     AudioManager(QObject * p) : parent(p) {
         audio = new QAudioOutput(QAudioFormat(), p);
-        audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
+        //audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
     }
 
     QAudioOutput * playAudio();
     bool setupAudioPlayer(QFile * file);
     bool setupAudioPlayerNoFile(CircularBuffer *);
+    bool setupAudioPlayerP2P(CircularBuffer *);
     void setVolume(double volume);
     bool stopAudio();
     void pauseAudio();

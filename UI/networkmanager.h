@@ -19,7 +19,7 @@ public:
     void connectViaTCP(const char * hostname, int port);
     void cleanUp();
     bool setupUDPforP2P(const char * hostname, int port);
-    bool createMulticastServerSocket(const char * IP, int port);
+    int createMulticastServerSocket(const char * IP, int port);
     bool createMulticastClientSocket(const char* serverAddr, int port);
     void startUDPReceiver(CircularBuffer *);
     void startTCPReceiver(int port);
