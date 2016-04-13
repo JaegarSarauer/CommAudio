@@ -2,7 +2,7 @@
 #include <iostream>
 #include <QDebug>
 
-QIODevice *device;
+QIODevice *device = NULL;
 QThread *playThread;
 
 bool AudioManager::setupAudioPlayer(QFile * f) {
@@ -51,7 +51,7 @@ bool AudioManager::setupAudioPlayerNoFile(CircularBuffer * buffer) {
 }
 
 bool AudioManager::setupAudioPlayerP2P(CircularBuffer * buffer) {
-    format.setSampleRate(8);
+    format.setSampleRate(8000);
     format.setChannelCount(1);
     format.setSampleSize(8);
 
@@ -84,7 +84,7 @@ void AudioManager::loadDataIntoBuffer()
 }
 
 void AudioManager::writeDataToDevice() {
-    qDebug() << "WHAT NOW";
+    //qDebug() << "WHAT NOW";
     if (PAUSED)
         return;
     if (audio == NULL) {
@@ -92,6 +92,10 @@ void AudioManager::writeDataToDevice() {
         emit finishedReading();
         qDebug() << "WHAT NOW!!!!!!!";
         return;
+    }
+    if (device == NULL)
+    {
+        device = audio->start();
     }
     int freeSpace = audio->bytesFree();
     if (freeSpace < DATA_BUFSIZE)

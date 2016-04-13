@@ -145,21 +145,3 @@ void NetworkAudioPlayer::writeDataToDevice()
 void NetworkAudioPlayer::unpauseAudio() {
     audio->resume();
 }
-
-void NetworkAudioPlayer::sendAudio(NetworkManager * manager)
-{
-    netManager = manager;
-    int bytesRead = 0;
-    char tempBuf[DATA_BUFSIZE];
-
-     // PUT IN SEPARATE THREAD
-    do {
-        bytesRead = file->read((char*)&tempBuf, sizeof(tempBuf));
-        if (bytesRead <= 0)
-        {
-            file->close();
-        }
-        netManager->sendP2P(tempBuf, DATA_BUFSIZE);
-        Sleep(120);
-    } while (!file->atEnd());
-}

@@ -29,10 +29,11 @@ void MicrophoneManager::RecordAudio()
     {
         qWarning("unable to open buffer");
     }
-    audio->start(buffer);
-    audioDevice = buffer;
+
     //audio->start(&destinationFile);
 
+    audio->start(buffer);
+    audioDevice = buffer;
     QThread * recordThread = new QThread();
     AudioRecordThread * micListener = new AudioRecordThread(audioDevice);
     micListener->moveToThread(recordThread);

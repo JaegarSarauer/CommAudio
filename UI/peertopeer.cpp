@@ -48,8 +48,6 @@ PeerToPeer::PeerToPeer(QWidget *parent) :
 
 void PeerToPeer::startP2P(const char * ip, int port)
 {
-   //CircularBuffer * incomingBuffer = new CircularBuffer(8192, 100);
-
     //start UDP receiver and sender
     // 1 UDP socket for each????
     if (!networkManager->setupUDPforP2P(ip, port))

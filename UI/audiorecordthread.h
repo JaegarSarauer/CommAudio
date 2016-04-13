@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QIODevice>
 
+#define MAX_LEN 8196
+
 class AudioRecordThread : public QObject
 {
     Q_OBJECT
