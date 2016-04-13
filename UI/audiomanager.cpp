@@ -14,8 +14,6 @@ bool AudioManager::setupAudioPlayer(QFile * f) {
     if (bytesRead <= 0)
         return false;
 
-    qDebug() << "SALSA " << wavHeader.SamplesPerSec << " " << wavHeader.NumOfChan << " " << wavHeader.bitsPerSample;
-
     format.setSampleRate(wavHeader.SamplesPerSec);
     format.setChannelCount(wavHeader.NumOfChan);
     format.setSampleSize(wavHeader.bitsPerSample);
