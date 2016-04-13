@@ -2,15 +2,15 @@
 
 void AudioRecordThread::checkMicrophone()
 {
+    char data[MAX_LEN];
     int blockSize = buffer->size() - position;
-    if (blockSize <= 7000)
+    if (blockSize <= MAX_LEN)
     {
         return;
     }
-    QByteArray ba;
 
     buffer->seek(position);
-    ba = buffer->read(blockSize);
-    position +=blockSize;
-    emit sendDataFromMic(ba.data(), blockSize);
+    buffer->read(data,MAX_LEN);
+    position +=MAX_LEN;
+    emit sendDataFromMic(data, MAX_LEN);
 }
