@@ -16,7 +16,7 @@ class NetworkManager : public QObject
 public:
     //NetworkManager();
     bool startNetwork();
-    void connectViaTCP(const char * hostname, int port);
+    bool connectToPeer(const char * hostname, int port);
     void cleanUp();
     bool setupUDPforP2P(const char * hostname, int port);
     int createMulticastServerSocket(const char * IP, int port);
@@ -24,8 +24,10 @@ public:
     void startUDPReceiver(CircularBuffer *);
     void startTCPReceiver(int port);
     void sendP2P(char * buf, int length);
+    bool createTCPSocket();
 
     static CircularBuffer * incBuffer;
+    static CircularBuffer * tcpBuffer;
     static SOCKET acceptSocket;
     bool tcpConnected;
 private:

@@ -55,12 +55,13 @@ bool AudioManager::setupAudioPlayerP2P(CircularBuffer * buffer) {
 
     format.setCodec("audio/pcm");
     format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setSampleType(QAudioFormat::SignedInt);
+    format.setSampleType(QAudioFormat::UnSignedInt);
 
     audio = new QAudioOutput(format, parent);
     audio->setVolume(constantVolume);
-    audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
+    //audioBuf = new CircularBuffer(DATA_BUFSIZE, MAX_BLOCKS);
 
+    audio->setBufferSize(DATA_BUFSIZE * 10);
     audioBuf = buffer;
     return true;
 }
@@ -125,7 +126,6 @@ QAudioOutput *AudioManager::playAudio() {
     //if (!PLAYING && !PAUSED)
     //    return NULL;
     if (!PAUSED) {
-        qDebug() << "this is";
         if (!playThread)
         {
 
@@ -174,34 +174,19 @@ bool AudioManager::stopAudio() {
     emit finishedWriting();
     if (audio == NULL)
         return false;
-    //delete audioBuf;
-    qDebug() << "WHAT1";
-    //audio->deleteLater();
     audio->destroyed();
-    //delete audio;
-    qDebug() << "WHAT2";
     audio = NULL;
-    qDebug() << "WHAT3";
     if (playThread != NULL) {
         emit killPlayThread();
         playThread->terminate();
-        //delete playThread;
         playThread = NULL;
     }
-    qDebug() << "WHAT32";
-    //delete bufferListener;
-    //bufferListener = NULL;
-
-    //audio->stop();
-    //file->close();
     return true;
 }
 
 void AudioManager::pauseAudio() {
     PAUSED = true;
-    qDebug() << "pause audio func 22";
     audio->suspend();
-    qDebug() << "pause audio func";
 }
 
 void AudioManager::unpauseAudio() {
@@ -220,9 +205,6 @@ AudioManager::~AudioManager()
 {
         audio = NULL;
         emit killPlayThread();
-        //playThread->terminate();
-        //delete playThread;
-        //playThread = NULL;
 }
 
 CircularBuffer * AudioManager::getAudioBuffer()

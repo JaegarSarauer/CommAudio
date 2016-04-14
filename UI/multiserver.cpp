@@ -29,13 +29,13 @@ MultiServer::MultiServer(QWidget *parent) :
  */
 MultiServer::~MultiServer()
 {
+    stopThreadLoop = true;
+    if (deviceListener)
+        deviceListener->audioPlayer = NULL;
+    if (netAudioPlayer)
+    netAudioPlayer->endThread = true;
     delete ui;
 }
-
-/*void MultiServer::on_sliderSound_actionTriggered(int action)
-{
-    audioManager->setVolume((double)ui->sliderSound->sliderPosition() / 100);
-}*/
 
 void MultiServer::on_QueueAddButton_released()
 {
@@ -52,10 +52,13 @@ void MultiServer::on_QueueAddButton_released()
  */
 void MultiServer::playNextSong() {
     if (stopThreadLoop) {
+        if (!deviceListener && !netAudioPlayer)
+            return;
         disconnect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(AddStatusMessage(QString)) );
         disconnect( deviceListener, SIGNAL(workFinished(const QString)), this, SLOT(playNextSong()) );
-        stopThreadLoop = false;
-        return;
+
+            stopThreadLoop = false;
+            return;
     }
 
     for (int i = 0; i < ui->listQueueFiles->count(); i++) {
@@ -80,11 +83,12 @@ void MultiServer::playNextSong() {
     }
     audioSenderThread = new QThread();
 
-    if (netAudioPlayer == NULL)
-    {
-        netAudioPlayer = new NetworkAudioPlayer();
+    //if (netAudioPlayer != NULL)
+        //delete netAudioPlayer;
 
-    }
+    netAudioPlayer = new NetworkAudioPlayer();
+
+    //}
     netAudioPlayer->setup(new QFile(current->text()));
     netAudioPlayer->moveToThread(audioSenderThread);
     //QAudioOutput * audioOut = netAudioPlayer->playAudio(netManager);
@@ -93,6 +97,12 @@ void MultiServer::playNextSong() {
     connect(netAudioPlayer, SIGNAL(audioStarted(QAudioOutput*)), this, SLOT(checkQueue(QAudioOutput*)));
     connect(netAudioPlayer, SIGNAL(sendToClient(char*,int)), this, SLOT(sendData(char*, int)));
     audioSenderThread->start();
+
+    QString output = QString("Current Wav Header Stats:\nSample Rate: %1 \nChannel Count: %2 \nSample Size: %3")
+            .arg(netAudioPlayer->audio->format().sampleRate())
+            .arg(netAudioPlayer->audio->format().channelCount())
+            .arg(netAudioPlayer->audio->format().sampleSize());
+    ui->wavStats->setText(output);
 }
 
 void MultiServer::sendData(char * buffer, int length)
@@ -133,11 +143,6 @@ void MultiServer::on_QueueRemoveButton_released()
     qDeleteAll(indexes.begin(), indexes.end());
 }
 
-void MultiServer::on_SendAudioButton_released()
-{
-
-}
-
 /*
  * This function will be called by the network layer to notify the application layer
  * with a confirmation message on a successful connection.
@@ -156,10 +161,16 @@ void MultiServer::on_BroadcastButton_released()
     if (isDataSending) {
         ui->BroadcastButton->setText("Broadcast");
         isDataSending = false;
+        stopThreadLoop = true;
+        if (deviceListener)
+            deviceListener->forceKill = true;
+        if (netAudioPlayer)
+        netAudioPlayer->endThread = true;
         return;
     } else {
         if (isMicrophoneSending) {
             emit stopMicrophoneRecording();
+            ui->SendMicrophone->setText("Start Recording Microphone");
             isMicrophoneSending = false;
         }
         ui->BroadcastButton->setText("Stop Broadcasting");
@@ -168,6 +179,8 @@ void MultiServer::on_BroadcastButton_released()
 
     if (ui->listQueueFiles->count() <= 0) {
         AddStatusMessage("No songs in queue.");
+        isDataSending = false;
+        ui->BroadcastButton->setText("Broadcast");
         return;
     }
 
@@ -177,7 +190,6 @@ void MultiServer::on_BroadcastButton_released()
     }
     int port = ui->linePort->text().toInt();
     switch (netManager->createMulticastServerSocket(ui->IPLine->text().toStdString().c_str(), port)) {
-    //switch (netManager->createMulticastServerSocket("234.7.8.9", port))
     case 0:
         AddStatusMessage("Invalid connection attempt.");
         return;
@@ -201,6 +213,20 @@ void MultiServer::on_SendMicrophone_released()
         mic = new MicrophoneManager(this, netManager);
         mic->RecordAudio();
         connect(this, SIGNAL(stopMicrophoneRecording()), mic, SLOT(stopRecording()));
+        if (!netManager->startNetwork())
+        {
+            return;
+        }
+        int port = ui->linePort->text().toInt();
+        switch (netManager->createMulticastServerSocket(ui->IPLine->text().toStdString().c_str(), port)) {
+        case 0:
+            AddStatusMessage("Invalid connection attempt.");
+            return;
+        case 1:
+            AddStatusMessage("Successful Connection!");
+            break;
+        }
+
         if (isDataSending)
             emit on_BroadcastButton_released();
         ui->SendMicrophone->setText("Stop Recording Microphone");
