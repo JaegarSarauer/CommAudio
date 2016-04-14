@@ -1,6 +1,6 @@
 #include <QThread>
 #include "filemanager.h"
-
+#include <QDir>
 
 FileManager::FileManager(NetworkManager *nManager)
 {
@@ -9,8 +9,8 @@ FileManager::FileManager(NetworkManager *nManager)
 
 bool FileManager::requestFile(const char * fileName)
 {
-    //send file name to netmanager
-    fp = fopen(fileName, "wb");
+    QString absName = QDir::currentPath() + "/MusicFiles" + fileName;
+    fp = fopen(absName.toStdString().c_str(), "wb");
     return fp == NULL? false : true;
 }
 
@@ -59,6 +59,7 @@ void FileManager::openFileForSending(char * filename)
     connect(fileReaderThread, SIGNAL(started()), reader, SLOT(startReading()));
     connect(reader, SIGNAL(sendPacket(char*,int)), networkManager, SLOT(sendViaTCP(char*, int)));
     connect(reader, SIGNAL(fileDone()), fileReaderThread, SLOT(quit()));
+    connect(reader, SIGNAL(fileDone()), this, SIGNAL(fileDone()));
     connect(reader, SIGNAL(error(char*, int)), fileReaderThread, SLOT(quit()));
     connect(reader, SIGNAL(error(char*, int)), networkManager, SLOT(sendViaTCP(char*, int)));
     fileReaderThread->start();

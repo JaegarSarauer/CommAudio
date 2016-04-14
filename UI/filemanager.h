@@ -17,6 +17,7 @@ public slots:
     void checkBuffer();
 signals:
     void errorFromPeer();
+    void fileDone();
 private:
     NetworkManager * networkManager;
     FILE * fp;

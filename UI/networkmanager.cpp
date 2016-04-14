@@ -169,6 +169,9 @@ bool NetworkManager::createTCPSocket()
 
 bool NetworkManager::connectToPeer(const char * hostname, int port)
 {
+    closesocket(tcpSocket);
+    delete NetworkManager::tcpBuffer;
+    createTCPSocket();
     return connectP2P(hostname, port);
 }
 

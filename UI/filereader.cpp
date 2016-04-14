@@ -1,8 +1,10 @@
 #include "filereader.h"
+#include <QDir>
 
 void FileReader::startReading()
 {
-    fp = fopen(filename, "rb");
+    QString absName = QDir::currentPath() + "/MusicFiles" + filename;
+    fp = fopen(absName.toStdString().c_str(), "rb");
     if (fp == NULL)
     {
         data[0] = 1;
