@@ -99,11 +99,11 @@ void PeerToPeer::on_buttonConnect_released()
 
     std::string ip(ui->lineIPAddress->text().toUtf8().constData());
     int port = atoi(ui->lineUDPPort->text().toUtf8().constData());
+    int tcpPort = atoi(ui->linePort->text().toUtf8().constData());
 
     // ---- TODO ---- handle connecting to the peer here, use the above 2 strings as parameters for connection
     AddStatusMessage("Attempting to Connect...");
-
-    startTCP(8321);
+    startTCP(tcpPort);
     startP2P(ip.c_str(), port);
     successfulConnection(true);
 }
@@ -386,23 +386,30 @@ void PeerToPeer::on_OpenPathButton_released()
 void PeerToPeer::on_requestFileButton_released()
 {
     std::string ip = ui->lineIPAddress->text().toStdString();
+    int tcpPort = atoi(ui->linePort->text().toUtf8().constData());
     // attempt to connect to peer via TCP
-    if (networkManager->connectToPeer(ip.c_str(), 8321)) //will get port from UI
+    if (networkManager->connectToPeer(ip.c_str(), tcpPort)) //will get port from UI
     {
         AddStatusMessage("Successfully connected to peer.");
     } else {
         AddStatusMessage("Connection to peer failed.");
     }
     //get filename from UI
-    if (fileManager->requestFile(ui->filenameEdit->text().toStdString().c_str()))
+    std::string name = ui->filenameEdit->text().toStdString();
+    if (fileManager->requestFile(name.c_str()))
     {
-        AddStatusMessage("Cannot create file.");
+        AddStatusMessage("File created. Requesting file...");
         QThread * fileCheckerThread = new QThread();
         fileManager->moveToThread(fileCheckerThread);
         connect(fileCheckerThread, SIGNAL(started()), fileManager, SLOT(checkBuffer()));
         connect(fileManager, SIGNAL(fileDone()), fileCheckerThread, SLOT(quit()));
         fileCheckerThread->start();
+
+        char msg[256];
+        msg[0] = 2;
+        memcpy(&msg[1], name.c_str(),name.length());
+        networkManager->sendViaTCP(msg, sizeof(msg));
     } else {
-        AddStatusMessage("File created. Requesting file...");
+        AddStatusMessage("Cannot create file.");
     }
 }

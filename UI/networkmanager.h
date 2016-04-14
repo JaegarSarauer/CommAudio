@@ -35,6 +35,7 @@ private:
 
 public slots:
     void sendMulticast(char * buf, int length);
+    void sendViaTCP(char * sbuf, int length);
 
 signals:
     void sendData(char *, int);
