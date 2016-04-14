@@ -37,6 +37,11 @@ MultiServer::~MultiServer()
     delete ui;
 }
 
+/*void MultiServer::on_sliderSound_actionTriggered(int action)
+{
+    audioManager->setVolume((double)ui->sliderSound->sliderPosition() / 100);
+}*/
+
 void MultiServer::on_QueueAddButton_released()
 {
     QList<QListWidgetItem *> selectedFile = ui->listMusicFiles->selectedItems();
@@ -97,12 +102,6 @@ void MultiServer::playNextSong() {
     connect(netAudioPlayer, SIGNAL(audioStarted(QAudioOutput*)), this, SLOT(checkQueue(QAudioOutput*)));
     connect(netAudioPlayer, SIGNAL(sendToClient(char*,int)), this, SLOT(sendData(char*, int)));
     audioSenderThread->start();
-
-    QString output = QString("Current Wav Header Stats:\nSample Rate: %1 \nChannel Count: %2 \nSample Size: %3")
-            .arg(netAudioPlayer->audio->format().sampleRate())
-            .arg(netAudioPlayer->audio->format().channelCount())
-            .arg(netAudioPlayer->audio->format().sampleSize());
-    ui->wavStats->setText(output);
 }
 
 void MultiServer::sendData(char * buffer, int length)
@@ -170,7 +169,6 @@ void MultiServer::on_BroadcastButton_released()
     } else {
         if (isMicrophoneSending) {
             emit stopMicrophoneRecording();
-            ui->SendMicrophone->setText("Start Recording Microphone");
             isMicrophoneSending = false;
         }
         ui->BroadcastButton->setText("Stop Broadcasting");
@@ -179,8 +177,6 @@ void MultiServer::on_BroadcastButton_released()
 
     if (ui->listQueueFiles->count() <= 0) {
         AddStatusMessage("No songs in queue.");
-        isDataSending = false;
-        ui->BroadcastButton->setText("Broadcast");
         return;
     }
 

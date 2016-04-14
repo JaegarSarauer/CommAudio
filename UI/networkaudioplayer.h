@@ -17,11 +17,11 @@ public:
     bool setup(QFile *);
     void unpauseAudio();
     ~NetworkAudioPlayer();
-    QAudioOutput *audio;
 
     bool endThread = false;
 private:
     QAudioFormat format;
+    QAudioOutput *audio;
     QIODevice * audioDevice;
     QAudioDeviceInfo deviceinfo;
     CircularBuffer * audioBuffer;

@@ -85,7 +85,6 @@ void AudioManager::writeDataToDevice() {
         return;
     if (audio == NULL) {
         file->close();
-        emit finishedReading();
         return;
     }
     if (device == NULL)
@@ -101,7 +100,8 @@ void AudioManager::writeDataToDevice() {
     } else {
         char * data = audioBuf->cbRead(1);
         int length = audioBuf->getLastBytesWritten();
-        device->write(data, length);
+        if (allowWrite)
+            device->write(data, length);
         blockCount++;
         if (blockCount <= 10)
         {

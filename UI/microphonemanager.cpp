@@ -9,9 +9,9 @@ void MicrophoneManager::RecordAudio()
 
     QAudioFormat format;
     // Set up the desired format, for example:
-    format.setSampleRate(8000);
-    format.setChannelCount(1);
-    format.setSampleSize(8);
+    format.setSampleRate(44100);
+    format.setChannelCount(2);
+    format.setSampleSize(16);
     format.setCodec("audio/pcm");
     format.setByteOrder(QAudioFormat::LittleEndian);
     format.setSampleType(QAudioFormat::SignedInt);
