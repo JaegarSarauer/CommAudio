@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "networkmanager.h"
+#include "filereader.h"
 
 class FileManager : public QObject
 {
@@ -10,13 +11,17 @@ class FileManager : public QObject
 public:
     FileManager(NetworkManager * nManager);
     bool requestFile(const char * fileName);
-
+    void openFileForSending(char * filename);
 public slots:
     void writeToFile(char * data, int length);
     void checkBuffer();
+signals:
+    void errorFromPeer();
 private:
     NetworkManager * networkManager;
     FILE * fp;
+    char incomingData[DATA_BUFSIZE];
+    FileReader * reader;
 };
 
 #endif // FILEMANAGER_H

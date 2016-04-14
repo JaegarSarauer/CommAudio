@@ -296,15 +296,10 @@ void NetworkManager::sendP2P(char * buf, int length)
 --  out the details of the data transfer to the screen before closing the socket.
 --
 ---------------------------------------------------------------------------------*/
-void sendViaTCP()
+void NetworkManager::sendViaTCP(char * sbuf, int length)
 {
-    char *sbuf;
-    char message[256];
-
-    sbuf = (char*)malloc(DATA_BUFSIZE);
-
     // transmit data
-    if (send(tcpSocket, sbuf, strlen(sbuf), 0) == -1)
+    if (send(acceptSocket, sbuf, length, 0) == -1)
     {
         //sprintf(message, "error: %d", WSAGetLastError());
         //writeToScreen(message);
@@ -837,29 +832,11 @@ void CALLBACK tcpRoutine(DWORD errorCode, DWORD bytesTransferred, LPOVERLAPPED o
 
     if (bytesTransferred > 0)
     {
-        switch(status)
+        if (!(NetworkManager::tcpBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len)))
         {
-        case NO_REQUEST_SENT: //haven't made request, so incoming is file name
-        {
-            memcpy(incFilename, socketInfo->DataBuf.buf, socketInfo->DataBuf.len);
-            // need to trim beginning SOH
-            break;
         }
-        case REQUEST_SENT: // request made, so incoming might be data or request
-            if (socketInfo->DataBuf.buf[0] == 1)
-            {
-                memcpy(incFilename, socketInfo->DataBuf.buf, socketInfo->DataBuf.len);
+    }
 
-                if (!(NetworkManager::tcpBuffer->cbWrite(socketInfo->DataBuf.buf, socketInfo->DataBuf.len)))
-                {
-                }
-            }
-            break;
-        }
-    }
-    else {
-        return;
-    }
     newFlags = 0;
     if (WSARecv(socketInfo->Socket, &(socketInfo->DataBuf), 1, NULL, &newFlags, &(socketInfo->Overlapped), tcpRoutine) == SOCKET_ERROR)
     {
